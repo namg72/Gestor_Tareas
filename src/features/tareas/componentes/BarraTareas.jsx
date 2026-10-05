@@ -18,14 +18,14 @@ export const prioridadOpciones = [
 ];
 export const BarraTareas = () => {
   return (
-    <section aria-labelledby="titulo-tareas" className="space-y-6 py-6 sm:py-8">
+    <section aria-labelledby="titulo-tareas" className="shrink-0 space-y-6 py-6 sm:py-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
           <h1 id="titulo-tareas" className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             Mis tareas
           </h1>
           <p className="text-sm text-gray-500 sm:text-base">
-            Un paso a la vez.
+            Gestión de tareas
           </p>
         </div>
         <AppButton
