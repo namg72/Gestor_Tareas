@@ -18,10 +18,10 @@ export const prioridadOpciones = [
 ];
 
 export type barraTareasProps = {
-  filtradoBusquda(texto: string): void;
+  filtrarBusqueda(texto: string): void;
 };
 
-export const BarraTareas = ({ filtradoBusquda }: barraTareasProps) => {
+export const BarraTareas = ({ filtrarBusqueda }: barraTareasProps) => {
   return (
     <section
       aria-labelledby="titulo-tareas"
@@ -53,7 +53,7 @@ export const BarraTareas = ({ filtradoBusquda }: barraTareasProps) => {
             aria-label="Buscar tareas"
             placeholder="Buscar tareas..."
             className="h-11 rounded-xl border-gray-200 bg-white pr-4 shadow-sm placeholder:text-gray-400 focus-visible:border-blue-500 focus-visible:ring-blue-500/20"
-            onChange={(e) => filtradoBusquda(e.target.value)}
+            onChange={(e) => filtrarBusqueda(e.target.value)}
           />
         </div>
         <div className="flex min-w-0 flex-2 gap-4">

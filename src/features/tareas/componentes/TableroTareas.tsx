@@ -27,24 +27,27 @@ export const TableroTareas = () => {
     void cargarTareas();
   }, []);
 
-  const tareasEnCurso = tareas.filter((tarea) => tarea.estado === "en_curso");
-  const tareasPendientes = tareas.filter(
+  const tareasFiltradas = tareas.filter((tarea) =>
+    tarea.titulo.toLowerCase().includes(textoABuscar.toLowerCase()),
+  );
+  const tareasEnCurso = tareasFiltradas.filter(
+    (tarea) => tarea.estado === "en_curso",
+  );
+  const tareasPendientes = tareasFiltradas.filter(
     (tarea) => tarea.estado === "pendiente",
   );
-  const tareasTerminadas = tareas.filter(
+  const tareasTerminadas = tareasFiltradas.filter(
     (tarea) => tarea.estado === "terminada",
   );
 
-  const filtradoBusquda = (texto: string): void => {
+  const filtrarBusqueda = (texto: string): void => {
     setTextoABuscar(texto);
-
-    console.log(22222, textoABuscar);
   };
 
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <BarraTareas filtradoBusquda={filtradoBusquda} />
+        <BarraTareas filtrarBusqueda={filtrarBusqueda} />
       </div>
 
       <div className="grid min-h-0 w-full flex-1 grid-cols-3 grid-rows-1 gap-4">
