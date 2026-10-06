@@ -2,9 +2,11 @@
 import { useEffect, useState } from "react";
 import type { Tarea } from "../types/tarea";
 import { ColumnaTareas } from "./ColumnaTareas";
+import { BarraTareas } from "./BarraTareas";
 
 export const TableroTareas = () => {
   const [tareas, setTareas] = useState<Tarea[]>([]);
+  const [textoABuscar, setTextoABuscar] = useState<string>("");
 
   useEffect(() => {
     const cargarTareas = async () => {
@@ -33,23 +35,35 @@ export const TableroTareas = () => {
     (tarea) => tarea.estado === "terminada",
   );
 
+  const filtradoBusquda = (texto: string): void => {
+    setTextoABuscar(texto);
+
+    console.log(22222, textoABuscar);
+  };
+
   return (
-    <div className="grid min-h-0 w-full flex-1 grid-cols-3 grid-rows-1 gap-4">
-      <ColumnaTareas
-        titulo={"Pendiente"}
-        color={"red"}
-        tareas={tareasPendientes}
-      />
-      <ColumnaTareas
-        titulo={"En curso"}
-        color={"yellow"}
-        tareas={tareasEnCurso}
-      />
-      <ColumnaTareas
-        titulo={"Terminada"}
-        color={"green"}
-        tareas={tareasTerminadas}
-      />
+    <div className="flex flex-col gap-8">
+      <div>
+        <BarraTareas filtradoBusquda={filtradoBusquda} />
+      </div>
+
+      <div className="grid min-h-0 w-full flex-1 grid-cols-3 grid-rows-1 gap-4">
+        <ColumnaTareas
+          titulo={"Pendiente"}
+          color={"red"}
+          tareas={tareasPendientes}
+        />
+        <ColumnaTareas
+          titulo={"En curso"}
+          color={"yellow"}
+          tareas={tareasEnCurso}
+        />
+        <ColumnaTareas
+          titulo={"Terminada"}
+          color={"green"}
+          tareas={tareasTerminadas}
+        />
+      </div>
     </div>
   );
 };

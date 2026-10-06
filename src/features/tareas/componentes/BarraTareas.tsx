@@ -16,12 +16,23 @@ export const prioridadOpciones = [
   { valor: "media", etiqueta: "Media" },
   { valor: "baja", etiqueta: "Baja" },
 ];
-export const BarraTareas = () => {
+
+export type barraTareasProps = {
+  filtradoBusquda(texto: string): void;
+};
+
+export const BarraTareas = ({ filtradoBusquda }: barraTareasProps) => {
   return (
-    <section aria-labelledby="titulo-tareas" className="shrink-0 space-y-6 py-6 sm:py-8">
+    <section
+      aria-labelledby="titulo-tareas"
+      className="shrink-0 space-y-6 py-6 sm:py-8"
+    >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-1">
-          <h1 id="titulo-tareas" className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+          <h1
+            id="titulo-tareas"
+            className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl"
+          >
             Mis tareas
           </h1>
           <p className="text-sm text-gray-500 sm:text-base">
@@ -35,16 +46,17 @@ export const BarraTareas = () => {
         />
       </div>
       <div className="flex gap-4">
-        <div className="min-w-0 flex-[3]">
+        <div className="min-w-0 flex-3">
           <AppInput
             icono={<Search />}
             type="search"
             aria-label="Buscar tareas"
             placeholder="Buscar tareas..."
             className="h-11 rounded-xl border-gray-200 bg-white pr-4 shadow-sm placeholder:text-gray-400 focus-visible:border-blue-500 focus-visible:ring-blue-500/20"
+            onChange={(e) => filtradoBusquda(e.target.value)}
           />
         </div>
-        <div className="flex min-w-0 flex-[2] gap-4">
+        <div className="flex min-w-0 flex-2 gap-4">
           <AppSelect
             opciones={estadoOpciones}
             etiqueta="Filtrar por estado"
