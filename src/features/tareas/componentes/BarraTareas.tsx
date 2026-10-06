@@ -19,9 +19,15 @@ export const prioridadOpciones = [
 
 export type barraTareasProps = {
   filtrarBusqueda(texto: string): void;
+  cambiarEstado(texto: string): void;
+  cambiarPrioridad(texto: string): void;
 };
 
-export const BarraTareas = ({ filtrarBusqueda }: barraTareasProps) => {
+export const BarraTareas = ({
+  filtrarBusqueda,
+  cambiarEstado,
+  cambiarPrioridad,
+}: barraTareasProps) => {
   return (
     <section
       aria-labelledby="titulo-tareas"
@@ -63,6 +69,7 @@ export const BarraTareas = ({ filtrarBusqueda }: barraTareasProps) => {
             defaultValue="todos"
             className="min-w-0 flex-1 rounded-xl border-gray-200 bg-white px-3 shadow-sm focus-visible:border-blue-500 focus-visible:ring-blue-500/20 data-[size=default]:h-11"
             placeholder="Todos los estados"
+            onValueChange={(valor) => cambiarEstado(valor!)}
           />
           <AppSelect
             opciones={prioridadOpciones}
@@ -70,6 +77,7 @@ export const BarraTareas = ({ filtrarBusqueda }: barraTareasProps) => {
             defaultValue="todas"
             className="min-w-0 flex-1 rounded-xl border-gray-200 bg-white px-3 shadow-sm focus-visible:border-blue-500 focus-visible:ring-blue-500/20 data-[size=default]:h-11"
             placeholder="Todas las prioridades"
+            onValueChange={(valor) => cambiarPrioridad(valor!)}
           />
         </div>
       </div>

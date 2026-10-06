@@ -7,6 +7,8 @@ import { BarraTareas } from "./BarraTareas";
 export const TableroTareas = () => {
   const [tareas, setTareas] = useState<Tarea[]>([]);
   const [textoABuscar, setTextoABuscar] = useState<string>("");
+  const [estado, setEstado] = useState<string>("todos");
+  const [prioridad, setPrioridad] = useState<string>("todas");
 
   useEffect(() => {
     const cargarTareas = async () => {
@@ -27,9 +29,18 @@ export const TableroTareas = () => {
     void cargarTareas();
   }, []);
 
-  const tareasFiltradas = tareas.filter((tarea) =>
-    tarea.titulo.toLowerCase().includes(textoABuscar.toLowerCase()),
-  );
+  const tareasFiltradas = tareas.filter((tarea) => {
+    const coincideTitulo = tarea.titulo
+      .toLowerCase()
+      .includes(textoABuscar.toLowerCase());
+
+    const coincideEstado = estado === "todos" || tarea.estado === estado;
+
+    const coincidePrioridad =
+      prioridad === "todas" || tarea.prioridad === prioridad;
+
+    return coincideTitulo && coincideEstado && coincidePrioridad;
+  });
   const tareasEnCurso = tareasFiltradas.filter(
     (tarea) => tarea.estado === "en_curso",
   );
@@ -44,10 +55,21 @@ export const TableroTareas = () => {
     setTextoABuscar(texto);
   };
 
+  const cambiarEstado = (estado: string): void => {
+    setEstado(estado);
+  };
+  const cambiarPrioridad = (prioridad: string): void => {
+    setPrioridad(prioridad);
+  };
+
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <BarraTareas filtrarBusqueda={filtrarBusqueda} />
+        <BarraTareas
+          filtrarBusqueda={filtrarBusqueda}
+          cambiarEstado={cambiarEstado}
+          cambiarPrioridad={cambiarPrioridad}
+        />
       </div>
 
       <div className="grid min-h-0 w-full flex-1 grid-cols-3 grid-rows-1 gap-4">
