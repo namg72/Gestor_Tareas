@@ -2,7 +2,10 @@ import type { ComponentProps } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type AppButtonProps = Omit<ComponentProps<typeof Button>, "variant" | "children"> & {
+type AppButtonProps = Omit<
+  ComponentProps<typeof Button>,
+  "variant" | "children"
+> & {
   texto: string;
   colorFondo?: "primary" | "neutral" | "danger" | "success";
   colorTexto?: "blanco" | "negro";
@@ -28,13 +31,19 @@ export function AppButton({
   type = "button",
   ...props
 }: AppButtonProps) {
-  const colorLetra = colorTexto ?? (colorFondo === "neutral" ? "negro" : "blanco");
+  const colorLetra =
+    colorTexto ?? (colorFondo === "neutral" ? "negro" : "blanco");
 
   return (
     <Button
       {...props}
       type={type}
-      className={cn(estilosFondo[colorFondo], estilosTexto[colorLetra], className)}
+      className={cn(
+        estilosFondo[colorFondo],
+        estilosTexto[colorLetra],
+        "h-auto px-4 py-2",
+        className,
+      )}
     >
       {texto}
     </Button>

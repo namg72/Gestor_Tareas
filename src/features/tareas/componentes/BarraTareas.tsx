@@ -21,12 +21,14 @@ export type barraTareasProps = {
   filtrarBusqueda(texto: string): void;
   cambiarEstado(texto: string): void;
   cambiarPrioridad(texto: string): void;
+  openModalAddNuevaTarea(): void;
 };
 
 export const BarraTareas = ({
   filtrarBusqueda,
   cambiarEstado,
   cambiarPrioridad,
+  openModalAddNuevaTarea,
 }: barraTareasProps) => {
   return (
     <section
@@ -49,6 +51,7 @@ export const BarraTareas = ({
           texto="Nueva tarea"
           colorFondo="primary"
           className="h-11 w-full rounded-xl px-5 font-semibold shadow-sm sm:w-auto"
+          onClick={openModalAddNuevaTarea}
         />
       </div>
       <div className="flex gap-4">

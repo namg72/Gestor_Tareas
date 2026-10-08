@@ -3,12 +3,14 @@ import { useEffect, useState } from "react";
 import type { Tarea } from "../types/tarea";
 import { ColumnaTareas } from "./ColumnaTareas";
 import { BarraTareas } from "./BarraTareas";
+import { ModalTarea } from "./ModalTarea";
 
 export const TableroTareas = () => {
   const [tareas, setTareas] = useState<Tarea[]>([]);
   const [textoABuscar, setTextoABuscar] = useState<string>("");
   const [estado, setEstado] = useState<string>("todos");
   const [prioridad, setPrioridad] = useState<string>("todas");
+  const [añadirTareaIsVisible, setAñadirTareaIsVisible] = useState(false);
 
   useEffect(() => {
     const cargarTareas = async () => {
@@ -61,6 +63,13 @@ export const TableroTareas = () => {
   const cambiarPrioridad = (prioridad: string): void => {
     setPrioridad(prioridad);
   };
+  const cerrarModal = (): void => {
+    setAñadirTareaIsVisible(false);
+  };
+
+  const openModalAddNuevaTarea = (): void => {
+    setAñadirTareaIsVisible(true);
+  };
 
   return (
     <div className="flex flex-col gap-8">
@@ -69,6 +78,7 @@ export const TableroTareas = () => {
           filtrarBusqueda={filtrarBusqueda}
           cambiarEstado={cambiarEstado}
           cambiarPrioridad={cambiarPrioridad}
+          openModalAddNuevaTarea={openModalAddNuevaTarea}
         />
       </div>
 
@@ -87,6 +97,13 @@ export const TableroTareas = () => {
           titulo={"Terminada"}
           color={"green"}
           tareas={tareasTerminadas}
+        />
+      </div>
+      <div className="flex justify-center">
+        <ModalTarea
+          modo={"crear"}
+          abierto={añadirTareaIsVisible}
+          cerrarModal={cerrarModal}
         />
       </div>
     </div>
