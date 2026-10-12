@@ -5,6 +5,7 @@ const colores = {
   red: "bg-red-500",
   yellow: "bg-yellow-500",
   green: "bg-green-500",
+  purple: "bg-purple-500",
 };
 
 type ColumnaTareasProps = {

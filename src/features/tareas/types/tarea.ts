@@ -1,4 +1,4 @@
-export type Estado = "pendiente" | "en_curso" | "terminada";
+export type Estado = "pendiente" | "en_curso" | "terminada" | "bloqueada";
 export type Prioridad = "baja" | "media" | "alta";
 
 export type Tarea = {

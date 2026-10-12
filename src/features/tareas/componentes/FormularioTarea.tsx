@@ -32,6 +32,35 @@ export const FormularioTarea = ({
     useState<MensajeResult | null>(null);
   const [archivos, setArchivos] = useState<File[]>([]);
 
+  const subirAdjuntos = async (
+    tareaId: number,
+    archivos: File[],
+  ): Promise<string[]> => {
+    const archivosFallidos: string[] = [];
+
+    for (const archivo of archivos) {
+      const datosArchivo = new FormData();
+
+      datosArchivo.append("archivo", archivo);
+
+      try {
+        const respuesta = await fetch(`/api/tareas/${tareaId}/adjuntos`, {
+          method: "POST",
+          body: datosArchivo,
+        });
+
+        if (!respuesta.ok) {
+          archivosFallidos.push(archivo.name);
+        }
+      } catch (error) {
+        console.error(`Error al subir ${archivo.name}`, error);
+        archivosFallidos.push(archivo.name);
+      }
+    }
+
+    return archivosFallidos;
+  };
+
   const enviarFormulario = async (datos: CrearTareaPayload): Promise<void> => {
     const respuesta = await fetch("/api/tareas", {
       method: "POST",
@@ -54,10 +83,24 @@ export const FormularioTarea = ({
     const tareaCreada: Tarea = await respuesta.json();
     añadirTareaCreada(tareaCreada);
 
-    setMensajeResultado({
-      tipo: "exito",
-      mensaje: "Tarea creada correctamente",
-    });
+    const archivosFallidos = await subirAdjuntos(tareaCreada.id, archivos);
+
+    if (archivosFallidos.length > 0) {
+      const cantidad = archivosFallidos.length;
+
+      setMensajeResultado({
+        tipo: "info",
+        mensaje: `Tarea creada. ${cantidad} ${
+          cantidad === 1 ? "archivo no pudo" : "archivos no pudieron"
+        } subirse.`,
+      });
+    } else {
+      setMensajeResultado({
+        tipo: "exito",
+        mensaje: "Tarea creada correctamente",
+      });
+    }
+
     setTimeout(() => {
       cerrarModal();
     }, 3000);
@@ -128,6 +171,7 @@ export const FormularioTarea = ({
             <option value="">Selectione ...</option>
             <option value="pendiente">Pendiente</option>
             <option value="en_curso">En curso</option>
+            <option value="bloqueada">Bloqueada</option>
             <option value="terminada">Terminada</option>
           </select>
 

@@ -38,7 +38,7 @@ Tarea.init(
       allowNull: true,
     },
     estado: {
-      type: DataTypes.ENUM("pendiente", "en_curso", "terminada"),
+      type: DataTypes.ENUM("pendiente", "en_curso", "terminada", "bloqueada"),
       allowNull: false,
       defaultValue: "pendiente",
     },

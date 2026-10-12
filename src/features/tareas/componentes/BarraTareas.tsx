@@ -8,6 +8,7 @@ export const estadoOpciones = [
   { valor: "pendiente", etiqueta: "Pendiente" },
   { valor: "en_curso", etiqueta: "En curso" },
   { valor: "terminada", etiqueta: "Terminada" },
+  { valor: "bloqueada", etiqueta: "Bloqueada" },
 ];
 
 export const prioridadOpciones = [

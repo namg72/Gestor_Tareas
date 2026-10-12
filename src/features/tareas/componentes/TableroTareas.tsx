@@ -53,6 +53,9 @@ export const TableroTareas = () => {
   const tareasPendientes = tareasFiltradas.filter(
     (tarea) => tarea.estado === "pendiente",
   );
+  const tareasBloqueadas = tareasFiltradas.filter(
+    (tarea) => tarea.estado === "bloqueada",
+  );
   const tareasTerminadas = tareasFiltradas.filter(
     (tarea) => tarea.estado === "terminada",
   );
@@ -86,7 +89,7 @@ export const TableroTareas = () => {
         />
       </div>
 
-      <div className="grid min-h-0 w-full flex-1 grid-cols-3 grid-rows-1 gap-4">
+      <div className="grid min-h-0 w-full flex-1 grid-cols-4 grid-rows-1 gap-4">
         <ColumnaTareas
           titulo={"Pendiente"}
           color={"red"}
@@ -96,6 +99,11 @@ export const TableroTareas = () => {
           titulo={"En curso"}
           color={"yellow"}
           tareas={tareasEnCurso}
+        />
+        <ColumnaTareas
+          titulo={"Bloqueada"}
+          color={"purple"}
+          tareas={tareasBloqueadas}
         />
         <ColumnaTareas
           titulo={"Terminada"}
