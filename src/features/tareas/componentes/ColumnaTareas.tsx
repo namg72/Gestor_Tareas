@@ -31,7 +31,7 @@ export const ColumnaTareas = ({
         <div>{tareas.length}</div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
         {tareas.map((tarea) => {
           return <TareaCard key={tarea.id} tarea={tarea} />;
         })}

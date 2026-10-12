@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const path = require("node:path");
 const { loadEnvConfig } = require("@next/env");
 
-const raizProyecto = path.resolve(__dirname, "../../..");
+const raizProyecto = path.resolve(__dirname, "../../../..");
 
 loadEnvConfig(raizProyecto, true, { info() {}, error: console.error });
 
@@ -11,25 +12,11 @@ const contrasena = process.env.DB_PASSWORD;
 const host = process.env.DB_HOST;
 const puertoConfigurado = process.env.DB_PORT;
 
-if (!nombreBaseDatos) {
-  throw new Error("Falta la variable DB_NAME");
-}
-
-if (!usuario) {
-  throw new Error("Falta la variable DB_USER");
-}
-
-if (!contrasena) {
-  throw new Error("Falta la variable DB_PASSWORD");
-}
-
-if (!host) {
-  throw new Error("Falta la variable DB_HOST");
-}
-
-if (!puertoConfigurado) {
-  throw new Error("Falta la variable DB_PORT");
-}
+if (!nombreBaseDatos) throw new Error("Falta la variable DB_NAME");
+if (!usuario) throw new Error("Falta la variable DB_USER");
+if (!contrasena) throw new Error("Falta la variable DB_PASSWORD");
+if (!host) throw new Error("Falta la variable DB_HOST");
+if (!puertoConfigurado) throw new Error("Falta la variable DB_PORT");
 
 const puerto = Number(puertoConfigurado);
 

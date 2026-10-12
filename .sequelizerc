@@ -1,7 +1,29 @@
 const path = require("node:path");
+const { loadEnvConfig } = require("@next/env");
+
+const raizProyecto = __dirname;
+
+loadEnvConfig(raizProyecto, true, { info() {}, error: console.error });
+
+const dialecto = process.env.DB_DIALECT ?? "sqlite";
+
+if (dialecto !== "mysql" && dialecto !== "sqlite") {
+  throw new Error('DB_DIALECT debe ser "mysql" o "sqlite"');
+}
 
 module.exports = {
-  config: path.resolve("src", "server", "db", "configuracion.cjs"),
-  "migrations-path": path.resolve("src", "server", "db", "migraciones"),
-  "seeders-path": path.resolve("src", "server", "db", "semillas"),
+  config: path.resolve(
+    "src",
+    "server",
+    "db",
+    dialecto,
+    "configuracion.cjs",
+  ),
+  "migrations-path": path.resolve(
+    "src",
+    "server",
+    "db",
+    dialecto,
+    "migraciones",
+  ),
 };

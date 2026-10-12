@@ -12,6 +12,10 @@ export const TableroTareas = () => {
   const [prioridad, setPrioridad] = useState<string>("todas");
   const [añadirTareaIsVisible, setAñadirTareaIsVisible] = useState(false);
 
+  const añadirTareaCreada = (tareaCreada: Tarea): void => {
+    setTareas((tareasAnteriores) => [...tareasAnteriores, tareaCreada]);
+  };
+
   useEffect(() => {
     const cargarTareas = async () => {
       try {
@@ -72,7 +76,7 @@ export const TableroTareas = () => {
   };
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex min-h-0 flex-1 flex-col gap-8">
       <div>
         <BarraTareas
           filtrarBusqueda={filtrarBusqueda}
@@ -104,6 +108,7 @@ export const TableroTareas = () => {
           modo={"crear"}
           abierto={añadirTareaIsVisible}
           cerrarModal={cerrarModal}
+          añadirTareaCreada={añadirTareaCreada}
         />
       </div>
     </div>

@@ -1,5 +1,5 @@
 import type { CrearTareaPayload } from "@/features/tareas/types/tarea";
-import { Tarea } from "../modelos/Tarea";
+import { Tarea } from "../modelos";
 
 export const obtenerTareas = async (): Promise<Tarea[]> => {
   return await Tarea.findAll();

@@ -31,7 +31,12 @@ const formatearFecha = (fecha: string | null) => {
 
 export const TareaCard = ({ tarea }: TareaCardProps) => {
   return (
-    <article className="flex flex-col gap-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+    <article
+      className="flex flex-col gap-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 ease-out
+hover:-translate-y-1
+hover:border-blue-200
+hover:shadow-md"
+    >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 space-y-1.5">
           <h3 className="text-base font-semibold leading-tight text-slate-900">

@@ -9,13 +9,13 @@ export const crearTareaSchema = z.object({
   descripcion: z
     .string()
     .trim()
-    .min(1, "El título es obligatorio")
-    .max(255, "La descripción no puede superar los 200 caracteres"),
+    .min(1, "La descripción es obligatoria")
+    .max(255, "La descripción no puede superar los 255 caracteres"),
   estado: z.enum(["pendiente", "en_curso", "terminada"], {
     error: "Selecciona un estado",
   }),
   prioridad: z.enum(["baja", "media", "alta"], {
-    error: "Selecciona un estado",
+    error: "Selecciona una prioridad",
   }),
   fecha_limite: z
     .union([

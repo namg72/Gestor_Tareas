@@ -18,10 +18,7 @@ export type CrearTareaPayload = {
   fecha_limite?: string | null;
 };
 
-export type CrearAdjuntoPayload = {
-  tarea_id: number;
-  nombre_original: string;
-  ruta_archivo: string;
-  tipo_mime: string;
-  tamano_bytes: number;
+export type MensajeResult = {
+  tipo: "exito" | "error" | "info";
+  mensaje: string;
 };
