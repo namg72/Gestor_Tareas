@@ -1,6 +1,9 @@
 import type { CrearAdjuntoPayload } from "@/features/tareas/types/adjuntos";
 import { Adjunto } from "../modelos";
-import { agregarAdjunto } from "../repositorios/adjuntosRepositorio";
+import {
+  agregarAdjunto,
+  obtenerAdjuntoPorId,
+} from "../repositorios/adjuntosRepositorio";
 
 export const crearAdjunto = async (
   payload: CrearAdjuntoPayload,
@@ -8,4 +11,8 @@ export const crearAdjunto = async (
   const adjuntoCreado = await agregarAdjunto(payload);
 
   return adjuntoCreado;
+};
+
+export const getAdjuntoById = async (id: number): Promise<Adjunto | null> => {
+  return await obtenerAdjuntoPorId(id);
 };

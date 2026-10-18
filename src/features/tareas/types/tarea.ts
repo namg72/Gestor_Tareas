@@ -1,4 +1,4 @@
-import { Adjunto } from "@/server/modelos";
+import type { Adjunto } from "./adjuntos";
 
 export type Estado = "pendiente" | "en_curso" | "terminada" | "bloqueada";
 export type Prioridad = "baja" | "media" | "alta";

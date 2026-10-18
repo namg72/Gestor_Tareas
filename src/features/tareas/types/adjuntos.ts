@@ -13,5 +13,5 @@ export type Adjunto = {
   tipo_mime: string;
   tamano_bytes: number;
   creado_en: string;
-  url: string;
+  url?: string;
 };

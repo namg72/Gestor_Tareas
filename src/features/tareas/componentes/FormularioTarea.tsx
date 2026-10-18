@@ -14,6 +14,8 @@ type FormularioTareaProps = {
   añadirTareaCreada(tarea: Tarea): void;
 };
 
+type CampoEditable = "titulo" | "descripcion" | "estado" | "prioridad" | null;
+
 export const FormularioTarea = ({
   modo,
   cerrarModal,
@@ -32,6 +34,8 @@ export const FormularioTarea = ({
   const [mensajeResultado, setMensajeResultado] =
     useState<MensajeResult | null>(null);
   const [archivos, setArchivos] = useState<File[]>([]);
+
+  const [campoEditando, setCampoEditando] = useState<CampoEditable>(null);
 
   const subirAdjuntos = async (
     tareaId: number,
@@ -137,6 +141,7 @@ export const FormularioTarea = ({
       </div>
 
       <div className="space-y-2">
+        {campoEditando !== null} && ( editando ) : (
         <label htmlFor="titulo" className="block text-sm font-medium">
           Título
         </label>
@@ -151,6 +156,7 @@ export const FormularioTarea = ({
             {errors.titulo.message}
           </div>
         )}
+        )
       </div>
 
       <div className="space-y-2">

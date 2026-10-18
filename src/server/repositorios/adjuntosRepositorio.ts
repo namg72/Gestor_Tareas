@@ -8,3 +8,9 @@ export const agregarAdjunto = async (
 
   return adjuntoCreado;
 };
+
+export const obtenerAdjuntoPorId = async (
+  id: number,
+): Promise<Adjunto | null> => {
+  return await Adjunto.findByPk(id);
+};
