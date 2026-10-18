@@ -4,6 +4,7 @@ import type { Tarea } from "../types/tarea";
 import { ColumnaTareas } from "./ColumnaTareas";
 import { BarraTareas } from "./BarraTareas";
 import { ModalTarea } from "./ModalTarea";
+import { eliminarTarea } from "../../../server/servicios/tareasServicio";
 
 export const TableroTareas = () => {
   const [tareas, setTareas] = useState<Tarea[]>([]);
@@ -78,6 +79,20 @@ export const TableroTareas = () => {
     setAñadirTareaIsVisible(true);
   };
 
+  const eliminarTarea = async (id: number): Promise<void> => {
+    const respuesta = await fetch(`/api/tareas/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!respuesta.ok) {
+      throw new Error("No se pudo eliminar la tarea");
+    }
+
+    setTareas((tareasAnteriores) =>
+      tareasAnteriores.filter((tarea) => tarea.id !== id),
+    );
+  };
+
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-8">
       <div>
@@ -94,21 +109,25 @@ export const TableroTareas = () => {
           titulo={"Pendiente"}
           color={"red"}
           tareas={tareasPendientes}
+          eliminarTarea={eliminarTarea}
         />
         <ColumnaTareas
           titulo={"En curso"}
           color={"yellow"}
           tareas={tareasEnCurso}
+          eliminarTarea={eliminarTarea}
         />
         <ColumnaTareas
           titulo={"Bloqueada"}
           color={"purple"}
           tareas={tareasBloqueadas}
+          eliminarTarea={eliminarTarea}
         />
         <ColumnaTareas
           titulo={"Terminada"}
           color={"green"}
           tareas={tareasTerminadas}
+          eliminarTarea={eliminarTarea}
         />
       </div>
       <div className="flex justify-center">

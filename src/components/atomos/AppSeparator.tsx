@@ -6,10 +6,5 @@ export function AppSeparator({
   className,
   ...props
 }: ComponentProps<typeof Separator>) {
-  return (
-    <Separator
-      {...props}
-      className={cn("bg-gray-300", className)}
-    />
-  );
+  return <Separator {...props} className={cn("bg-gray-300", className)} />;
 }

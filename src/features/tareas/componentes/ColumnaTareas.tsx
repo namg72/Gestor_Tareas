@@ -12,12 +12,13 @@ type ColumnaTareasProps = {
   titulo: string;
   tareas: Tarea[];
   color: keyof typeof colores;
+  eliminarTarea: (id: number) => Promise<void>;
 };
-
 export const ColumnaTareas = ({
   titulo,
   tareas,
   color,
+  eliminarTarea,
 }: ColumnaTareasProps) => {
   return (
     <div className="flex min-h-0 min-w-0 flex-col gap-4 rounded-lg bg-gray-200 p-4 shadow">
@@ -34,7 +35,13 @@ export const ColumnaTareas = ({
 
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
         {tareas.map((tarea) => {
-          return <TareaCard key={tarea.id} tarea={tarea} />;
+          return (
+            <TareaCard
+              key={tarea.id}
+              tarea={tarea}
+              eliminarTarea={eliminarTarea}
+            />
+          );
         })}
       </div>
     </div>

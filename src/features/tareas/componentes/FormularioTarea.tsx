@@ -5,7 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { crearTareaSchema } from "../esquemas/tareaSchema";
 import { useState } from "react";
 import { AppMensaje } from "@/components/atomos/feedback/AppMensaje";
-import { ZonaAdjuntos } from "./ZonaAdjuntos";
+import { ZonaAdjuntos } from "@/components/organismos/ZonaAdjuntos";
+import { X } from "lucide-react";
 
 type FormularioTareaProps = {
   modo: "crear" | "editar";
@@ -101,9 +102,8 @@ export const FormularioTarea = ({
       });
     }
 
-    setTimeout(() => {
-      cerrarModal();
-    }, 3000);
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    cerrarModal();
   };
 
   const archivosAdjuntados = (adjuntados: File[]): void => {
@@ -116,11 +116,25 @@ export const FormularioTarea = ({
     );
   };
 
+  const closeModal = () => {
+    cerrarModal();
+  };
+
   return (
     <form className="space-y-5" onSubmit={handleSubmit(enviarFormulario)}>
-      <h2 id="titulo-modal" className="text-2xl font-semibold text-gray-900">
-        {titulo}
-      </h2>
+      <div className="flex justify-between">
+        <div>
+          <h2
+            id="titulo-modal"
+            className="text-2xl font-semibold text-gray-900"
+          >
+            {titulo}
+          </h2>
+        </div>
+        <div>
+          <X onClick={closeModal} />
+        </div>
+      </div>
 
       <div className="space-y-2">
         <label htmlFor="titulo" className="block text-sm font-medium">
@@ -157,7 +171,7 @@ export const FormularioTarea = ({
         )}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
         <div className="space-y-2">
           <label htmlFor="estado" className="block text-sm font-medium">
             Estado
@@ -204,18 +218,18 @@ export const FormularioTarea = ({
             </div>
           )}
         </div>
-      </div>
 
-      <div className="space-y-2">
-        <label htmlFor="fecha_limite" className="block text-sm font-medium">
-          Fecha límite
-        </label>
-        <input
-          {...register("fecha_limite")}
-          id="fecha_limite"
-          type="date"
-          className="w-full rounded-lg border border-gray-300 px-3 py-2"
-        />
+        <div className="space-y-2">
+          <label htmlFor="fecha_limite" className="block text-sm font-medium">
+            Fecha límite
+          </label>
+          <input
+            {...register("fecha_limite")}
+            id="fecha_limite"
+            type="date"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2"
+          />
+        </div>
       </div>
       <ZonaAdjuntos
         archivos={archivos}

@@ -1,3 +1,5 @@
+import { Adjunto } from "@/server/modelos";
+
 export type Estado = "pendiente" | "en_curso" | "terminada" | "bloqueada";
 export type Prioridad = "baja" | "media" | "alta";
 
@@ -8,6 +10,7 @@ export type Tarea = {
   estado: Estado;
   prioridad: Prioridad;
   fecha_limite: string | null;
+  adjuntos?: Adjunto[];
 };
 
 export type CrearTareaPayload = {
