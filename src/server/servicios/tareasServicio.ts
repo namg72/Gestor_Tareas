@@ -1,8 +1,12 @@
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
-import type { CrearTareaPayload } from "@/features/tareas/types/tarea";
+import type {
+  ActualizarTareaPayload,
+  CrearTareaPayload,
+} from "@/features/tareas/types/tarea";
 import { Tarea } from "../modelos";
 import {
+  actualizarTareaPorId,
   agregarTarea,
   eliminarTareaPorId,
   obtenerTareas,
@@ -30,15 +34,19 @@ export const crearTarea = async (
 export const eliminarTarea = async (id: number): Promise<void> => {
   await eliminarTareaPorId(id);
 
-  const rutaAdjuntos = join(
-    process.cwd(),
-    "storage",
-    "adjuntos",
-    String(id),
-  );
+  const rutaAdjuntos = join(process.cwd(), "storage", "adjuntos", String(id));
 
   await rm(rutaAdjuntos, {
     recursive: true,
     force: true,
   });
+};
+
+export const actualizarTarea = async (
+  id: number,
+  payload: ActualizarTareaPayload,
+): Promise<Tarea | null> => {
+  const tareaActualizada = await actualizarTareaPorId(id, payload);
+
+  return tareaActualizada;
 };

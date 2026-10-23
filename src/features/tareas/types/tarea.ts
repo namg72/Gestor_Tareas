@@ -20,6 +20,13 @@ export type CrearTareaPayload = {
   prioridad?: Prioridad;
   fecha_limite?: string | null;
 };
+export type ActualizarTareaPayload = {
+  titulo?: string;
+  descripcion?: string | null;
+  estado?: Estado;
+  prioridad?: Prioridad;
+  fecha_limite?: string | null;
+};
 
 export type MensajeResult = {
   tipo: "exito" | "error" | "info";

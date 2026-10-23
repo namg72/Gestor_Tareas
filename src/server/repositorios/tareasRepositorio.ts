@@ -1,4 +1,7 @@
-import type { CrearTareaPayload } from "@/features/tareas/types/tarea";
+import type {
+  ActualizarTareaPayload,
+  CrearTareaPayload,
+} from "@/features/tareas/types/tarea";
 import { Adjunto, Tarea } from "../modelos";
 
 export const obtenerTareas = async (): Promise<Tarea[]> => {
@@ -27,4 +30,17 @@ export const eliminarTareaPorId = async (id: number): Promise<number> => {
   return await Tarea.destroy({
     where: { id },
   });
+};
+
+export const actualizarTareaPorId = async (
+  id: number,
+  payload: ActualizarTareaPayload,
+): Promise<Tarea | null> => {
+  const tareaAActualizar = await Tarea.findByPk(id);
+
+  if (!tareaAActualizar) return null;
+
+  await tareaAActualizar.update(payload);
+
+  return tareaAActualizar;
 };
