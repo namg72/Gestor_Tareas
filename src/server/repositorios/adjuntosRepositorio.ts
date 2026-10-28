@@ -14,3 +14,7 @@ export const obtenerAdjuntoPorId = async (
 ): Promise<Adjunto | null> => {
   return await Adjunto.findByPk(id);
 };
+
+export const eliminarAdjuntoPorId = async (id: number): Promise<number> => {
+  return Adjunto.destroy({ where: { id } });
+};

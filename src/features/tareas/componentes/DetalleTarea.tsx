@@ -1,23 +1,19 @@
 "use client";
 
-import {
-  CalendarDays,
-  FileImage,
-  FileText,
-  LoaderCircle,
-  X,
-} from "lucide-react";
-import Image from "next/image";
+import { CalendarDays, FileText, LoaderCircle, X } from "lucide-react";
 import type { Tarea } from "../types/tarea";
 import type { Adjunto } from "../types/adjuntos";
 import { useEffect, useState } from "react";
 import { AppButton } from "../../../components/atomos/buttons/AppButton";
 import { VisorAdjunto } from "./VisorAdjunto";
 import { ZonaAdjuntos } from "@/components/organismos/ZonaAdjuntos";
+import { AppAlertDialog } from "@/components/moleculas/dialogoConfirmacion/AppAlertDialog";
+import { ComentariosTarea } from "./ComentariosTarea";
 
 type DetalleTareaProps = {
   id: number;
   closeModal: () => void;
+  actualizarListaTareas: (tarea: Tarea) => void;
 };
 
 const estilosEstado = {
@@ -53,7 +49,11 @@ const formatearTamano = (bytes: number): string => {
 };
 type CampoEditable = "titulo" | "descripcion" | "estado" | "prioridad" | null;
 
-export const DetalleTarea = ({ id, closeModal }: DetalleTareaProps) => {
+export const DetalleTarea = ({
+  id,
+  closeModal,
+  actualizarListaTareas,
+}: DetalleTareaProps) => {
   const [tarea, setTarea] = useState<Tarea | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,6 +63,26 @@ export const DetalleTarea = ({ id, closeModal }: DetalleTareaProps) => {
     useState<Adjunto | null>(null);
   const [mostrarZonaAdjuntos, setMostrarZonaAdjuntos] = useState(false);
   const [archivosNuevos, setArchivosNuevos] = useState<File[]>([]);
+  const [archivoEnVista, setArchivoEnVista] = useState<{
+    archivo: File;
+    url: string;
+  } | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (archivoEnVista) URL.revokeObjectURL(archivoEnVista.url);
+    };
+  }, [archivoEnVista]);
+
+  const visualizarArchivoNuevo = (archivo: File): void => {
+    setArchivoEnVista({ archivo, url: URL.createObjectURL(archivo) });
+  };
+  const [adjuntoAEliminar, setAdjuntoAEliminar] = useState<Adjunto | null>(
+    null,
+  );
+  const [adjuntosAEliminar, setAdjuntosAEliminar] = useState<number[]>([]);
+  const [guardando, setGuardando] = useState(false);
+  const [errorGuardado, setErrorGuardado] = useState<string | null>(null);
 
   useEffect(() => {
     const cargarTarea = async (): Promise<void> => {
@@ -98,20 +118,129 @@ export const DetalleTarea = ({ id, closeModal }: DetalleTareaProps) => {
     setCampoEditando(null);
     setArchivosNuevos([]);
     setMostrarZonaAdjuntos(false);
+    setAdjuntosAEliminar([]);
+    setErrorGuardado(null);
   };
 
-  const guardarCambios = (): void => {
-    if (!borrador) return;
+  const guardarCambios = async (): Promise<void> => {
+    if (!borrador || guardando) return;
+    let tareaActualizada: Tarea = { ...borrador };
+    setGuardando(true);
+    setErrorGuardado(null);
 
-    setTarea(borrador);
-    setCampoEditando(null);
+    try {
+      const respuestaTarea = await fetch(`/api/tareas/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          titulo: borrador.titulo,
+          descripcion: borrador.descripcion,
+          estado: borrador.estado,
+          prioridad: borrador.prioridad,
+          fecha_limite: borrador.fecha_limite,
+        }),
+      });
+
+      if (!respuestaTarea.ok) {
+        throw new Error("No se ha podido actualizar la tarea");
+      }
+
+      setTarea({ ...tareaActualizada });
+
+      for (const adjuntoId of adjuntosAEliminar) {
+        const respuesta = await fetch(`/api/adjuntos/${adjuntoId}`, {
+          method: "DELETE",
+        });
+        if (!respuesta.ok && respuesta.status !== 404) {
+          throw new Error(
+            "No se pudieron eliminar todos los adjuntos. Los eliminados anteriormente ya se han borrado; puedes reintentar los pendientes.",
+          );
+        }
+        const quitarAdjunto = (actual: Tarea | null): Tarea | null =>
+          actual
+            ? {
+                ...actual,
+                adjuntos: actual.adjuntos?.filter(
+                  (adjunto) => adjunto.id !== adjuntoId,
+                ),
+              }
+            : actual;
+        setTarea(quitarAdjunto);
+        setBorrador(quitarAdjunto);
+        setAdjuntosAEliminar((pendientes) =>
+          pendientes.filter((pendiente) => pendiente !== adjuntoId),
+        );
+        tareaActualizada = {
+          ...tareaActualizada,
+          adjuntos: tareaActualizada.adjuntos?.filter(
+            (adjunto) => adjunto.id !== adjuntoId,
+          ),
+        };
+      }
+      for (const archivo of archivosNuevos) {
+        const datosArchivo = new FormData();
+        datosArchivo.append("archivo", archivo);
+
+        const respuestaAdjunto = await fetch(`/api/tareas/${id}/adjuntos`, {
+          method: "POST",
+          body: datosArchivo,
+        });
+
+        if (!respuestaAdjunto.ok) {
+          throw new Error(
+            `No se pudo subir "${archivo.name}". Los cambios anteriores ya están guardados; puedes reintentar los archivos pendientes.`,
+          );
+        }
+
+        const adjuntoCreado: Adjunto = await respuestaAdjunto.json();
+        tareaActualizada = {
+          ...tareaActualizada,
+          adjuntos: [...(tareaActualizada.adjuntos ?? []), adjuntoCreado],
+        };
+        const agregarAdjunto = (actual: Tarea | null): Tarea | null =>
+          actual
+            ? {
+                ...actual,
+                adjuntos: [...(actual.adjuntos ?? []), adjuntoCreado],
+              }
+            : actual;
+
+        setTarea(agregarAdjunto);
+        setBorrador(agregarAdjunto);
+        setArchivosNuevos((pendientes) =>
+          pendientes.filter((pendiente) => pendiente !== archivo),
+        );
+      }
+
+      setCampoEditando(null);
+      setMostrarZonaAdjuntos(false);
+      actualizarListaTareas(tareaActualizada);
+      closeModal();
+    } catch (error) {
+      setErrorGuardado(
+        error instanceof Error
+          ? error.message
+          : "No se pudieron guardar los cambios",
+      );
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  const confirmarBorradoAdjunto = (): void => {
+    if (!adjuntoAEliminar) return;
+    setAdjuntosAEliminar((pendientes) => [
+      ...new Set([...pendientes, adjuntoAEliminar.id]),
+    ]);
+    setAdjuntoAEliminar(null);
   };
   const zonaAdjuntos = (): void => {
     setMostrarZonaAdjuntos(true);
   };
   const cancelarSubida = (): void => {
     setMostrarZonaAdjuntos(false);
-    setArchivosNuevos([]);
   };
 
   const archivosAdjuntados = (nuevos: File[]): void => {
@@ -145,6 +274,7 @@ export const DetalleTarea = ({ id, closeModal }: DetalleTareaProps) => {
             <button
               type="button"
               aria-label="Cerrar detalle"
+              disabled={guardando}
               className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
               onClick={cerrarDetalle}
             >
@@ -211,11 +341,19 @@ export const DetalleTarea = ({ id, closeModal }: DetalleTareaProps) => {
                 )}
               </section>
 
+              <ComentariosTarea comentarios={tarea.comentarios ?? []} />
+
               <section className="space-y-3">
                 <div className="flex items-center justify-between gap-4">
                   <h3 className="text-base font-semibold text-slate-900">
                     Archivos adjuntos
-                    <span className="ml-2">({tarea.adjuntos?.length})</span>
+                    <span className="ml-2">
+                      (
+                      {tarea.adjuntos?.filter(
+                        (adjunto) => !adjuntosAEliminar.includes(adjunto.id),
+                      ).length ?? 0}
+                      )
+                    </span>
                   </h3>
 
                   {!mostrarZonaAdjuntos ? (
@@ -227,7 +365,7 @@ export const DetalleTarea = ({ id, closeModal }: DetalleTareaProps) => {
                   ) : (
                     <AppButton
                       type={"button"}
-                      texto="Cancelar subida"
+                      texto="Ocultar zona de subida"
                       colorFondo="neutral"
                       onClick={cancelarSubida}
                     />
@@ -235,53 +373,54 @@ export const DetalleTarea = ({ id, closeModal }: DetalleTareaProps) => {
                 </div>
 
                 {tarea.adjuntos && tarea.adjuntos.length > 0 ? (
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {tarea.adjuntos.map((adjunto) => {
-                      const esImagen = adjunto.tipo_mime.startsWith("image/");
-                      const IconoArchivo = esImagen ? FileImage : FileText;
-                      const urlAdjunto = `/api/adjuntos/${adjunto.id}`;
-
-                      return (
-                        <button
-                          type="button"
-                          key={adjunto.id}
-                          onClick={() => setAdjuntoSeleccionado(adjunto)}
-                          className="flex min-w-0 items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 text-left transition-colors hover:border-blue-300 hover:bg-blue-50/40"
-                        >
-                          <div className="relative flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white text-blue-600 shadow-sm ring-1 ring-slate-200">
-                            {esImagen ? (
-                              <Image
-                                src={urlAdjunto}
-                                alt={`Vista previa de ${adjunto.nombre_original}`}
-                                fill
-                                sizes="56px"
-                                unoptimized
-                                className="object-cover"
-                              />
-                            ) : (
-                              <IconoArchivo
-                                className="size-5"
+                  <ul className="space-y-2">
+                    {tarea.adjuntos
+                      .filter(
+                        (adjunto) => !adjuntosAEliminar.includes(adjunto.id),
+                      )
+                      .map((adjunto) => {
+                        return (
+                          <li
+                            key={adjunto.id}
+                            className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2"
+                          >
+                            <button
+                              type="button"
+                              onClick={() => setAdjuntoSeleccionado(adjunto)}
+                              aria-label={`Abrir ${adjunto.nombre_original}`}
+                              className="flex min-w-0 flex-1 items-center gap-3 rounded text-left transition-colors hover:text-blue-600 focus-visible:outline-2 focus-visible:outline-blue-500"
+                            >
+                              <FileText
+                                className="size-5 shrink-0 text-slate-500"
                                 aria-hidden="true"
                               />
-                            )}
-                          </div>
 
-                          <div className="min-w-0">
-                            <p
-                              className="truncate text-sm font-medium text-slate-800"
-                              title={adjunto.nombre_original}
+                              <div className="min-w-0 flex-1">
+                                <p
+                                  className="truncate text-sm font-medium text-slate-800"
+                                  title={adjunto.nombre_original}
+                                >
+                                  {adjunto.nombre_original}
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                  {formatearTamano(adjunto.tamano_bytes)}
+                                </p>
+                              </div>
+                            </button>
+                            <button
+                              type="button"
+                              disabled={guardando}
+                              aria-label={`Eliminar ${adjunto.nombre_original}`}
+                              onClick={() => setAdjuntoAEliminar(adjunto)}
+                              className="shrink-0 rounded-md p-1 text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
                             >
-                              {adjunto.nombre_original}
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              {formatearTamano(adjunto.tamano_bytes)}
-                            </p>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : (
+                              <X aria-hidden="true" className="size-4" />
+                            </button>
+                          </li>
+                        );
+                      })}
+                  </ul>
+                ) : archivosNuevos.length === 0 ? (
                   <div className="flex min-h-32 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
                     <div className="space-y-2 text-slate-500">
                       <FileText
@@ -291,10 +430,11 @@ export const DetalleTarea = ({ id, closeModal }: DetalleTareaProps) => {
                       <p className="text-sm">Esta tarea no tiene adjuntos.</p>
                     </div>
                   </div>
-                )}
+                ) : null}
               </section>
               {mostrarZonaAdjuntos && (
                 <ZonaAdjuntos
+                  visualizarArchivo={visualizarArchivoNuevo}
                   archivos={archivosNuevos}
                   archivosAdjuntados={archivosAdjuntados}
                   eliminarArchivo={eliminarArchivoNuevo}
@@ -366,16 +506,31 @@ export const DetalleTarea = ({ id, closeModal }: DetalleTareaProps) => {
             </aside>
           </div>
 
-          {(campoEditando !== null || archivosNuevos.length > 0) && (
+          {adjuntosAEliminar.length > 0 && (
+            <p role="status" className="px-6 text-sm text-amber-700">
+              {adjuntosAEliminar.length} adjunto(s) pendiente(s) de eliminar. Se
+              borrarán definitivamente al pulsar Guardar.
+            </p>
+          )}
+          {errorGuardado && (
+            <p role="alert" className="px-6 text-sm text-red-600">
+              {errorGuardado}
+            </p>
+          )}
+          {(campoEditando !== null ||
+            archivosNuevos.length > 0 ||
+            adjuntosAEliminar.length > 0) && (
             <div className="flex justify-end gap-4 p-4">
               <AppButton
                 texto="Cancelar"
                 colorFondo="neutral"
                 onClick={cancelarEdicion}
+                disabled={guardando}
               />
 
               <AppButton
-                texto="Guardar"
+                texto={guardando ? "Guardando..." : "Guardar"}
+                disabled={guardando}
                 colorFondo="primary"
                 onClick={guardarCambios}
               />
@@ -384,10 +539,29 @@ export const DetalleTarea = ({ id, closeModal }: DetalleTareaProps) => {
         </div>
       )}
 
+      <AppAlertDialog
+        abierto={adjuntoAEliminar !== null}
+        titulo="Eliminar adjunto"
+        descripcion={`¿Quieres eliminar "${adjuntoAEliminar?.nombre_original ?? ""}"? `}
+        textoConfirmar="Marcar para eliminar"
+        textoCancelar="Cancelar"
+        variante="peligro"
+        onCambiarAbierto={(abierto) => {
+          if (!abierto) setAdjuntoAEliminar(null);
+        }}
+        onConfirmar={confirmarBorradoAdjunto}
+      />
       {adjuntoSeleccionado && (
         <VisorAdjunto
           adjunto={adjuntoSeleccionado}
           cerrarVisor={() => setAdjuntoSeleccionado(null)}
+        />
+      )}
+      {archivoEnVista && (
+        <VisorAdjunto
+          archivo={archivoEnVista.archivo}
+          url={archivoEnVista.url}
+          cerrarVisor={() => setArchivoEnVista(null)}
         />
       )}
     </div>

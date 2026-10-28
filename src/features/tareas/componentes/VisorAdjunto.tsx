@@ -4,16 +4,16 @@ import { Download, X } from "lucide-react";
 import Image from "next/image";
 import type { Adjunto } from "../types/adjuntos";
 
-type VisorAdjuntoProps = {
-  adjunto: Adjunto;
+type VisorAdjuntoProps = ({ adjunto: Adjunto } | { archivo: File; url: string }) & {
   cerrarVisor: () => void;
 };
 
-export const VisorAdjunto = ({
-  adjunto,
-  cerrarVisor,
-}: VisorAdjuntoProps) => {
-  const urlAdjunto = `/api/adjuntos/${adjunto.id}`;
+export const VisorAdjunto = (props: VisorAdjuntoProps) => {
+  const { cerrarVisor } = props;
+  const guardado = "adjunto" in props;
+  const urlAdjunto = guardado ? `/api/adjuntos/${props.adjunto.id}` : props.url;
+  const nombre = guardado ? props.adjunto.nombre_original : props.archivo.name;
+  const tipo = guardado ? props.adjunto.tipo_mime : props.archivo.type;
 
   return (
     <div className="fixed inset-0 z-[60] bg-slate-950/80 p-4 backdrop-blur-sm animate-in fade-in duration-200">
@@ -29,12 +29,13 @@ export const VisorAdjunto = ({
       >
         <header className="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-3">
           <p className="min-w-0 truncate font-semibold text-slate-900">
-            {adjunto.nombre_original}
+            {nombre}
           </p>
 
           <div className="flex shrink-0 items-center gap-2">
             <a
-              href={`${urlAdjunto}?descargar=1`}
+              href={guardado ? `${urlAdjunto}?descargar=1` : urlAdjunto}
+              download={guardado ? undefined : nombre}
               className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
             >
               <Download className="size-4" aria-hidden="true" />
@@ -53,10 +54,10 @@ export const VisorAdjunto = ({
         </header>
 
         <div className="relative min-h-0 flex-1 bg-slate-100">
-          {adjunto.tipo_mime.startsWith("image/") ? (
+          {tipo.startsWith("image/") ? (
             <Image
               src={urlAdjunto}
-              alt={adjunto.nombre_original}
+              alt={nombre}
               fill
               sizes="90vw"
               unoptimized
@@ -65,7 +66,7 @@ export const VisorAdjunto = ({
           ) : (
             <iframe
               src={urlAdjunto}
-              title={`Vista previa de ${adjunto.nombre_original}`}
+              title={`Vista previa de ${nombre}`}
               className="size-full border-0 bg-white"
             />
           )}

@@ -5,6 +5,7 @@ import { ColumnaTareas } from "./ColumnaTareas";
 import { BarraTareas } from "./BarraTareas";
 import { ModalTarea } from "./ModalTarea";
 import { eliminarTarea } from "../../../server/servicios/tareasServicio";
+import { ReceiptPoundSterling } from "lucide-react";
 
 export const TableroTareas = () => {
   const [tareas, setTareas] = useState<Tarea[]>([]);
@@ -93,6 +94,16 @@ export const TableroTareas = () => {
     );
   };
 
+  const actualizarListaTareas = (tarea: Tarea): void => {
+    setTareas(
+      tareas.map((item) => {
+        if (item.id === tarea.id) {
+          return tarea;
+        }
+        return item;
+      }),
+    );
+  };
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-8">
       <div>
@@ -110,24 +121,28 @@ export const TableroTareas = () => {
           color={"red"}
           tareas={tareasPendientes}
           eliminarTarea={eliminarTarea}
+          actualizarListaTareas={actualizarListaTareas}
         />
         <ColumnaTareas
           titulo={"En curso"}
           color={"yellow"}
           tareas={tareasEnCurso}
           eliminarTarea={eliminarTarea}
+          actualizarListaTareas={actualizarListaTareas}
         />
         <ColumnaTareas
           titulo={"Bloqueada"}
           color={"purple"}
           tareas={tareasBloqueadas}
           eliminarTarea={eliminarTarea}
+          actualizarListaTareas={actualizarListaTareas}
         />
         <ColumnaTareas
           titulo={"Terminada"}
           color={"green"}
           tareas={tareasTerminadas}
           eliminarTarea={eliminarTarea}
+          actualizarListaTareas={actualizarListaTareas}
         />
       </div>
       <div className="flex justify-center">

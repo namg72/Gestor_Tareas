@@ -13,12 +13,14 @@ type ColumnaTareasProps = {
   tareas: Tarea[];
   color: keyof typeof colores;
   eliminarTarea: (id: number) => Promise<void>;
+  actualizarListaTareas: (tarea: Tarea) => void;
 };
 export const ColumnaTareas = ({
   titulo,
   tareas,
   color,
   eliminarTarea,
+  actualizarListaTareas,
 }: ColumnaTareasProps) => {
   return (
     <div className="flex min-h-0 min-w-0 flex-col gap-4 rounded-lg bg-gray-200 p-4 shadow">
@@ -40,6 +42,7 @@ export const ColumnaTareas = ({
               key={tarea.id}
               tarea={tarea}
               eliminarTarea={eliminarTarea}
+              actualizarListaTareas={actualizarListaTareas}
             />
           );
         })}

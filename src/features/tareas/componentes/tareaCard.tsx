@@ -10,6 +10,7 @@ import { DetalleTarea } from "./DetalleTarea";
 type TareaCardProps = {
   tarea: Tarea;
   eliminarTarea: (id: number) => Promise<void>;
+  actualizarListaTareas: (tarea: Tarea) => void;
 };
 
 const prioridadOpciones = [
@@ -33,7 +34,11 @@ const formatearFecha = (fecha: string | null) => {
   }).format(new Date(`${fecha}T00:00:00`));
 };
 
-export const TareaCard = ({ tarea, eliminarTarea }: TareaCardProps) => {
+export const TareaCard = ({
+  tarea,
+  eliminarTarea,
+  actualizarListaTareas,
+}: TareaCardProps) => {
   const [dialogoAbierto, setDialogoAbierto] = useState(false);
   const [detalleAbierto, setDetalleAbierto] = useState(false);
 
@@ -105,7 +110,13 @@ export const TareaCard = ({ tarea, eliminarTarea }: TareaCardProps) => {
           onConfirmar={confirmarEliminacion}
         />
       </article>
-      {detalleAbierto && <DetalleTarea id={tarea.id} closeModal={closeModal} />}
+      {detalleAbierto && (
+        <DetalleTarea
+          id={tarea.id}
+          closeModal={closeModal}
+          actualizarListaTareas={actualizarListaTareas}
+        />
+      )}
     </>
   );
 };

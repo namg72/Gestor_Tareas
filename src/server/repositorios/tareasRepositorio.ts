@@ -2,7 +2,7 @@ import type {
   ActualizarTareaPayload,
   CrearTareaPayload,
 } from "@/features/tareas/types/tarea";
-import { Adjunto, Tarea } from "../modelos";
+import { Adjunto, Comentario, Tarea } from "../modelos";
 
 export const obtenerTareas = async (): Promise<Tarea[]> => {
   return await Tarea.findAll();
@@ -13,6 +13,10 @@ export const obtenerTareasbyId = async (id: number): Promise<Tarea | null> => {
       {
         model: Adjunto,
         as: "adjuntos",
+      },
+      {
+        model: Comentario,
+        as: "comentarios",
       },
     ],
   });

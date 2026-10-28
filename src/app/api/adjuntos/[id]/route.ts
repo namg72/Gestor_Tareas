@@ -1,8 +1,26 @@
 import { readFile } from "node:fs/promises";
 import { isAbsolute, relative, resolve } from "node:path";
-import { getAdjuntoById } from "@/server/servicios/adjuntoServicio";
+import { eliminarAdjunto, getAdjuntoById } from "@/server/servicios/adjuntoServicio";
 
 export const runtime = "nodejs";
+
+export const DELETE = async (_request: Request, context: ContextoRuta) => {
+  try {
+    const { id } = await context.params;
+    const adjuntoId = Number(id);
+    if (!Number.isInteger(adjuntoId) || adjuntoId <= 0) {
+      return Response.json({ mensaje: "El identificador del adjunto no es válido" }, { status: 400 });
+    }
+    const eliminado = await eliminarAdjunto(adjuntoId);
+    if (!eliminado) {
+      return Response.json({ mensaje: "El adjunto no existe" }, { status: 404 });
+    }
+    return new Response(null, { status: 204 });
+  } catch (error) {
+    console.error(error);
+    return Response.json({ mensaje: "No se pudo eliminar el adjunto" }, { status: 500 });
+  }
+};
 
 type ContextoRuta = {
   params: Promise<{ id: string }>;

@@ -5,6 +5,8 @@ import { useId, useState } from "react";
 import type { ChangeEvent, DragEvent } from "react";
 
 type ZonaAdjuntosProps = {
+  mostrarLista?: boolean;
+  visualizarArchivo?(archivo: File): void;
   archivos: File[];
   archivosAdjuntados(archivos: File[]): void;
   eliminarArchivo(indice: number): void;
@@ -21,6 +23,8 @@ const TIPOS_PERMITIDOS = [
 ];
 
 export const ZonaAdjuntos = ({
+  mostrarLista = true,
+  visualizarArchivo,
   archivos,
   archivosAdjuntados,
   eliminarArchivo,
@@ -143,7 +147,7 @@ export const ZonaAdjuntos = ({
         </p>
       )}
 
-      {archivos.length > 0 && (
+      {mostrarLista && archivos.length > 0 && (
         <ul className="space-y-2">
           {archivos.map((archivo, indice) => (
             <li
@@ -152,14 +156,20 @@ export const ZonaAdjuntos = ({
             >
               <FileText aria-hidden="true" className="size-5 text-slate-500" />
 
-              <div className="min-w-0 flex-1">
+              <button
+                type="button"
+                disabled={!visualizarArchivo}
+                onClick={() => visualizarArchivo?.(archivo)}
+                className="min-w-0 flex-1 text-left enabled:hover:text-blue-600"
+                aria-label={`Ver ${archivo.name}`}
+              >
                 <p className="truncate text-sm font-medium text-slate-800">
                   {archivo.name}
                 </p>
                 <p className="text-xs text-slate-500">
                   {convertirTamano(archivo.size)}
                 </p>
-              </div>
+              </button>
 
               <button
                 type="button"
