@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Cabecera } from "@/components/layout/Cabecera";
+import { Providers } from "./providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,7 +27,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="flex h-dvh flex-col overflow-hidden bg-gray-100 p-12">
         <Cabecera />
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

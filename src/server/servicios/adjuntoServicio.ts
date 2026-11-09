@@ -27,14 +27,20 @@ export const eliminarAdjunto = async (id: number): Promise<boolean> => {
   const directorio = resolve(process.cwd(), "storage", "adjuntos");
   const ruta = resolve(process.cwd(), adjunto.ruta_archivo);
   const rutaRelativa = relative(directorio, ruta);
-  if (!rutaRelativa || rutaRelativa.startsWith("..") || isAbsolute(rutaRelativa)) {
+  if (
+    !rutaRelativa ||
+    rutaRelativa.startsWith("..") ||
+    isAbsolute(rutaRelativa)
+  ) {
     throw new Error("La ruta del adjunto no es válida");
   }
 
-  const contenido = await readFile(ruta).catch((error: NodeJS.ErrnoException) => {
-    if (error.code === "ENOENT") return null;
-    throw error;
-  });
+  const contenido = await readFile(ruta).catch(
+    (error: NodeJS.ErrnoException) => {
+      if (error.code === "ENOENT") return null;
+      throw error;
+    },
+  );
   await rm(ruta, { force: true });
 
   try {

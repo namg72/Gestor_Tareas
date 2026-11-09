@@ -9,6 +9,8 @@ import { VisorAdjunto } from "./VisorAdjunto";
 import { ZonaAdjuntos } from "@/components/organismos/ZonaAdjuntos";
 import { AppAlertDialog } from "@/components/moleculas/dialogoConfirmacion/AppAlertDialog";
 import { ComentariosTarea } from "./ComentariosTarea";
+import { useMutation } from "@tanstack/react-query";
+import { crearComentario } from "../peticiones/comentarios";
 
 type DetalleTareaProps = {
   id: number;
@@ -83,6 +85,10 @@ export const DetalleTarea = ({
   const [adjuntosAEliminar, setAdjuntosAEliminar] = useState<number[]>([]);
   const [guardando, setGuardando] = useState(false);
   const [errorGuardado, setErrorGuardado] = useState<string | null>(null);
+
+  const publicarComentario = useMutation({
+    mutationFn: (contenido: string) => crearComentario(id, contenido),
+  });
 
   useEffect(() => {
     const cargarTarea = async (): Promise<void> => {
@@ -228,6 +234,18 @@ export const DetalleTarea = ({
       setGuardando(false);
     }
   };
+  const onPublicar = async (contenido: string): Promise<void> => {
+    const comentarioCreado = await publicarComentario.mutateAsync(contenido);
+
+    setTarea((tareaAnterior) => {
+      if (tareaAnterior === null) return null;
+
+      return {
+        ...tareaAnterior,
+        comentarios: [...(tareaAnterior.comentarios ?? []), comentarioCreado],
+      };
+    });
+  };
 
   const confirmarBorradoAdjunto = (): void => {
     if (!adjuntoAEliminar) return;
@@ -341,7 +359,10 @@ export const DetalleTarea = ({
                 )}
               </section>
 
-              <ComentariosTarea comentarios={tarea.comentarios ?? []} />
+              <ComentariosTarea
+                comentarios={tarea.comentarios ?? []}
+                onPublicar={onPublicar}
+              />
 
               <section className="space-y-3">
                 <div className="flex items-center justify-between gap-4">
