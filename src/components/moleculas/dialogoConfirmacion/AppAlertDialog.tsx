@@ -1,4 +1,5 @@
 "use client";
+import { AppMensaje } from "@/components/atomos/feedback/AppMensaje";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,6 +18,7 @@ type AppAlertDialogProps = {
   textoConfirmar?: string;
   textoCancelar?: string;
   cargando?: boolean;
+  mensajeError?: string | null;
   variante?: "normal" | "peligro";
   onCambiarAbierto(abierto: boolean): void;
   onConfirmar(): void | Promise<void>;
@@ -29,6 +31,7 @@ export const AppAlertDialog = ({
   textoConfirmar,
   textoCancelar,
   cargando,
+  mensajeError,
   variante,
   onCambiarAbierto,
   onConfirmar,
@@ -41,6 +44,12 @@ export const AppAlertDialog = ({
 
           <AlertDialogDescription>{descripcion}</AlertDialogDescription>
         </AlertDialogHeader>
+
+        {mensajeError && (
+          <div role="alert">
+            <AppMensaje tipo="error" mensaje={mensajeError} />
+          </div>
+        )}
 
         <AlertDialogFooter>
           <AlertDialogCancel disabled={cargando}>

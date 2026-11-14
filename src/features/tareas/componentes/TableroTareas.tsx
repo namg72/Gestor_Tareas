@@ -1,11 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
-import type { Tarea } from "../types/tarea";
+import type { MensajeResult, Tarea } from "../types/tarea";
 import { ColumnaTareas } from "./ColumnaTareas";
 import { BarraTareas } from "./BarraTareas";
 import { ModalTarea } from "./ModalTarea";
-import { eliminarTarea } from "../../../server/servicios/tareasServicio";
-import { ReceiptPoundSterling } from "lucide-react";
+import { AppMensaje } from "@/components/atomos/feedback/AppMensaje";
 
 export const TableroTareas = () => {
   const [tareas, setTareas] = useState<Tarea[]>([]);
@@ -13,10 +12,7 @@ export const TableroTareas = () => {
   const [estado, setEstado] = useState<string>("todos");
   const [prioridad, setPrioridad] = useState<string>("todas");
   const [añadirTareaIsVisible, setAñadirTareaIsVisible] = useState(false);
-
-  const añadirTareaCreada = (tareaCreada: Tarea): void => {
-    setTareas((tareasAnteriores) => [...tareasAnteriores, tareaCreada]);
-  };
+  const [avisoTarea, setAvisoTarea] = useState<MensajeResult | null>(null);
 
   useEffect(() => {
     const cargarTareas = async () => {
@@ -77,7 +73,12 @@ export const TableroTareas = () => {
   };
 
   const openModalAddNuevaTarea = (): void => {
+    setAvisoTarea(null);
     setAñadirTareaIsVisible(true);
+  };
+  const añadirTareaCreada = (tareaCreada: Tarea): void => {
+    setTareas((tareasAnteriores) => [...tareasAnteriores, tareaCreada]);
+    setAvisoTarea({ tipo: "exito", mensaje: "Tarea creada correctamente" });
   };
 
   const eliminarTarea = async (id: number): Promise<void> => {
@@ -92,6 +93,7 @@ export const TableroTareas = () => {
     setTareas((tareasAnteriores) =>
       tareasAnteriores.filter((tarea) => tarea.id !== id),
     );
+    setAvisoTarea({ tipo: "exito", mensaje: "Tarea borrada correctamente" });
   };
 
   const actualizarListaTareas = (tarea: Tarea): void => {
@@ -103,6 +105,10 @@ export const TableroTareas = () => {
         return item;
       }),
     );
+    setAvisoTarea({
+      tipo: "exito",
+      mensaje: "Tarea actualizada correctamente",
+    });
   };
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-8">
@@ -153,6 +159,17 @@ export const TableroTareas = () => {
           añadirTareaCreada={añadirTareaCreada}
         />
       </div>
+      {avisoTarea && !añadirTareaIsVisible && (
+        <div
+          role="status"
+          className="aviso-tarea fixed bottom-6 left-6 z-40 w-[40vw] px-5"
+          onAnimationEnd={(evento) => {
+            if (evento.target === evento.currentTarget) setAvisoTarea(null);
+          }}
+        >
+          <AppMensaje tipo={avisoTarea.tipo} mensaje={avisoTarea.mensaje} />
+        </div>
+      )}
     </div>
   );
 };

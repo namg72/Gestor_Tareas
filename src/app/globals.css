@@ -117,6 +117,28 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+.aviso-tarea {
+  --desplazamiento-aviso: 1rem;
+  animation: mostrar-aviso-tarea 4.5s ease-in-out both;
+}
+
+@keyframes mostrar-aviso-tarea {
+  0%, 100% {
+    opacity: 0;
+    transform: translateY(var(--desplazamiento-aviso));
+  }
+  18%, 84% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aviso-tarea {
+    --desplazamiento-aviso: 0px;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

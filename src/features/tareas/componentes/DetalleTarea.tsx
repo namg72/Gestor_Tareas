@@ -295,9 +295,13 @@ export const DetalleTarea = ({
 
       return {
         ...actual,
-        comentarios: comentarios.some((comentario) => comentario.id === comentarioId)
+        comentarios: comentarios.some(
+          (comentario) => comentario.id === comentarioId,
+        )
           ? comentarios.map((comentario) =>
-              comentario.id === comentarioId ? comentarioActualizado : comentario,
+              comentario.id === comentarioId
+                ? comentarioActualizado
+                : comentario,
             )
           : [...comentarios, comentarioActualizado],
       };
@@ -325,10 +329,14 @@ export const DetalleTarea = ({
 
   // Borra el comentario seleccionado y cierra el diálogo.
   const confirmarBorradoComentario = async (): Promise<void> => {
-    if (!comentarioAEliminar) return;
+    if (!comentarioAEliminar || borrarComentarioMutation.isPending) return;
 
-    await onBorrarComentario(comentarioAEliminar.id);
-    setComentarioAEliminar(null);
+    try {
+      await onBorrarComentario(comentarioAEliminar.id);
+      setComentarioAEliminar(null);
+    } catch {
+      return;
+    }
   };
 
   // Acciones de adjuntos
@@ -387,7 +395,7 @@ export const DetalleTarea = ({
           {error ?? "La tarea no existe"}
         </div>
       ) : (
-        <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-2xl animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-300">
+        <div className="max-h-[90vh] w-full max-w-6xl flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl animate-in fade-in zoom-in-95 slide-in-from-bottom-2 duration-300">
           <div className="flex justify-end p-4">
             <button
               type="button"
@@ -399,7 +407,7 @@ export const DetalleTarea = ({
               <X className="size-5" aria-hidden="true" />
             </button>
           </div>
-          <header className="flex items-start justify-between gap-6 border-b border-slate-200 px-6 py-5 sm:px-8">
+          <header className="flex items-start justify-between gap-6 border-b border-slate-200 px-6 py-2 sm:px-8">
             <div className="min-w-0 flex-1 space-y-2">
               <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
                 Tarea #{tarea.id}
@@ -430,8 +438,8 @@ export const DetalleTarea = ({
             </div>
           </header>
 
-          <div className="grid gap-8 px-6 py-6 sm:px-8 md:grid-cols-[minmax(0,1fr)_16rem]">
-            <main className="min-w-0 space-y-8">
+          <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)] gap-8 px-6 py-6 sm:px-8 md:grid-cols-[minmax(0,1fr)_30rem]">
+            <main className="min-w-0 space-y-8 min-h-0 overflow-y-auto">
               <section className="space-y-3">
                 <h3 className="text-base font-semibold text-slate-900">
                   Descripción
@@ -463,85 +471,92 @@ export const DetalleTarea = ({
                 comentarios={tarea.comentarios ?? []}
                 onPublicar={onPublicar}
                 onEditar={onEditarComentario}
-                onSolicitarEliminar={setComentarioAEliminar}
-              />
-
-              <AdjuntosDetalleTarea
-                adjuntos={tarea.adjuntos ?? []}
-                adjuntosAEliminar={adjuntosAEliminar}
-                archivosNuevos={archivosNuevos}
-                guardando={guardando}
-                mostrarZonaAdjuntos={mostrarZonaAdjuntos}
-                zonaAdjuntos={mostrarSubidaAdjuntos}
-                cancelarSubida={ocultarSubidaAdjuntos}
-                abrirAdjunto={setAdjuntoSeleccionado}
-                solicitarEliminarAdjunto={setAdjuntoAEliminar}
-                visualizarArchivoNuevo={visualizarArchivoNuevo}
-                archivosAdjuntados={archivosAdjuntados}
-                eliminarArchivoNuevo={eliminarArchivoNuevo}
+                onSolicitarEliminar={(comentario) => {
+                  borrarComentarioMutation.reset();
+                  setComentarioAEliminar(comentario);
+                }}
               />
             </main>
 
-            <aside className="h-fit space-y-6 rounded-xl border border-slate-200 bg-slate-50 p-5">
-              <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Estado
-                </p>
-                {campoEditando === "estado" ? (
-                  <select
-                    value={borrador.estado}
-                    onChange={(evento) =>
-                      setBorrador({
-                        ...borrador,
-                        estado: evento.target.value as Tarea["estado"],
-                      })
-                    }
-                    className="w-full rounded-lg border border-blue-400 bg-white px-3 py-2 text-sm"
-                  >
-                    <option value="pendiente">Pendiente</option>
-                    <option value="en_curso">En curso</option>
-                    <option value="bloqueada">Bloqueada</option>
-                    <option value="terminada">Terminada</option>
-                  </select>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setCampoEditando("estado")}
-                    className={`inline-flex rounded-full px-3 py-1.5 text-sm font-semibold capitalize ring-1 ring-inset ${estilosEstado[borrador.estado]}`}
-                  >
-                    {formatearTexto(borrador.estado)}
-                  </button>
-                )}
+            <aside className="min-w-0 space-y-4 min-h-0 overflow-y-auto py-8">
+              <div className="space-y-6 rounded-xl border border-slate-200 bg-slate-50 p-5">
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Estado
+                  </p>
+                  {campoEditando === "estado" ? (
+                    <select
+                      value={borrador.estado}
+                      onChange={(evento) =>
+                        setBorrador({
+                          ...borrador,
+                          estado: evento.target.value as Tarea["estado"],
+                        })
+                      }
+                      className="w-full rounded-lg border border-blue-400 bg-white px-3 py-2 text-sm"
+                    >
+                      <option value="pendiente">Pendiente</option>
+                      <option value="en_curso">En curso</option>
+                      <option value="bloqueada">Bloqueada</option>
+                      <option value="terminada">Terminada</option>
+                    </select>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setCampoEditando("estado")}
+                      className={`inline-flex rounded-full px-3 py-1.5 text-sm font-semibold capitalize ring-1 ring-inset ${estilosEstado[borrador.estado]}`}
+                    >
+                      {formatearTexto(borrador.estado)}
+                    </button>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Prioridad
+                  </p>
+                  {campoEditando === "prioridad" ? (
+                    <select
+                      value={borrador.prioridad}
+                      onChange={(evento) =>
+                        setBorrador({
+                          ...borrador,
+                          prioridad: evento.target.value as Tarea["prioridad"],
+                        })
+                      }
+                      className="w-full rounded-lg border border-blue-400 bg-white px-3 py-2 text-sm"
+                    >
+                      <option value="baja">Baja</option>
+                      <option value="media">Media</option>
+                      <option value="alta">Alta</option>
+                    </select>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setCampoEditando("prioridad")}
+                      className={`inline-flex rounded-full px-3 py-1.5 text-sm font-semibold capitalize ring-1 ring-inset ${estilosPrioridad[borrador.prioridad]}`}
+                    >
+                      {borrador.prioridad}
+                    </button>
+                  )}
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Prioridad
-                </p>
-                {campoEditando === "prioridad" ? (
-                  <select
-                    value={borrador.prioridad}
-                    onChange={(evento) =>
-                      setBorrador({
-                        ...borrador,
-                        prioridad: evento.target.value as Tarea["prioridad"],
-                      })
-                    }
-                    className="w-full rounded-lg border border-blue-400 bg-white px-3 py-2 text-sm"
-                  >
-                    <option value="baja">Baja</option>
-                    <option value="media">Media</option>
-                    <option value="alta">Alta</option>
-                  </select>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setCampoEditando("prioridad")}
-                    className={`inline-flex rounded-full px-3 py-1.5 text-sm font-semibold capitalize ring-1 ring-inset ${estilosPrioridad[borrador.prioridad]}`}
-                  >
-                    {borrador.prioridad}
-                  </button>
-                )}
+              <div className="space-y-4 rounded-xl border border-slate-200 bg-slate-50 p-5 mt-22">
+                <AdjuntosDetalleTarea
+                  adjuntos={tarea.adjuntos ?? []}
+                  adjuntosAEliminar={adjuntosAEliminar}
+                  archivosNuevos={archivosNuevos}
+                  guardando={guardando}
+                  mostrarZonaAdjuntos={mostrarZonaAdjuntos}
+                  zonaAdjuntos={mostrarSubidaAdjuntos}
+                  cancelarSubida={ocultarSubidaAdjuntos}
+                  abrirAdjunto={setAdjuntoSeleccionado}
+                  solicitarEliminarAdjunto={setAdjuntoAEliminar}
+                  visualizarArchivoNuevo={visualizarArchivoNuevo}
+                  archivosAdjuntados={archivosAdjuntados}
+                  eliminarArchivoNuevo={eliminarArchivoNuevo}
+                />
               </div>
             </aside>
           </div>
@@ -611,9 +626,16 @@ export const DetalleTarea = ({
         descripcion="¿Estás seguro de que quieres eliminar el comentario?"
         textoCancelar="Cancelar"
         textoConfirmar="Eliminar"
-        onCambiarAbierto={function (abierto: boolean): void {
-          if (!abierto) {
+        cargando={borrarComentarioMutation.isPending}
+        mensajeError={
+          borrarComentarioMutation.isError
+            ? "No se pudo eliminar el comentario. Inténtalo de nuevo."
+            : null
+        }
+        onCambiarAbierto={(abierto) => {
+          if (!abierto && !borrarComentarioMutation.isPending) {
             setComentarioAEliminar(null);
+            borrarComentarioMutation.reset();
           }
         }}
         onConfirmar={confirmarBorradoComentario}

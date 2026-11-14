@@ -86,7 +86,6 @@ export const FormularioTarea = ({
     }
 
     const tareaCreada: Tarea = await respuesta.json();
-    añadirTareaCreada(tareaCreada);
 
     const archivosFallidos = await subirAdjuntos(tareaCreada.id, archivos);
 
@@ -99,15 +98,12 @@ export const FormularioTarea = ({
           cantidad === 1 ? "archivo no pudo" : "archivos no pudieron"
         } subirse.`,
       });
-    } else {
-      setMensajeResultado({
-        tipo: "exito",
-        mensaje: "Tarea creada correctamente",
-      });
+
+      await new Promise((resolve) => setTimeout(resolve, 3000));
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 3000));
     cerrarModal();
+    añadirTareaCreada(tareaCreada);
   };
 
   const archivosAdjuntados = (adjuntados: File[]): void => {
@@ -141,12 +137,12 @@ export const FormularioTarea = ({
       </div>
 
       <div className="space-y-2">
-        {campoEditando !== null} && ( editando ) : (
         <label htmlFor="titulo" className="block text-sm font-medium">
-          Título
+          Título <span aria-hidden="true" className="text-red-600">*</span>
         </label>
         <input
           {...register("titulo")}
+          aria-required="true"
           id="titulo"
           type="text"
           className="w-full rounded-lg border border-gray-300 px-3 py-2"
@@ -156,15 +152,15 @@ export const FormularioTarea = ({
             {errors.titulo.message}
           </div>
         )}
-        )
       </div>
 
       <div className="space-y-2">
         <label htmlFor="descripcion" className="block text-sm font-medium">
-          Descripción
+          Descripción <span aria-hidden="true" className="text-red-600">*</span>
         </label>
         <textarea
           {...register("descripcion")}
+          aria-required="true"
           id="descripcion"
           rows={4}
           className="w-full resize-none rounded-lg border border-gray-300 px-3 py-2"
@@ -180,10 +176,11 @@ export const FormularioTarea = ({
       <div className="grid gap-4 md:grid-cols-3">
         <div className="space-y-2">
           <label htmlFor="estado" className="block text-sm font-medium">
-            Estado
+            Estado <span aria-hidden="true" className="text-red-600">*</span>
           </label>
           <select
             {...register("estado")}
+            aria-required="true"
             id="estado"
             defaultValue=""
             className="w-full rounded-lg border border-gray-300 px-3 py-2"
@@ -204,10 +201,11 @@ export const FormularioTarea = ({
 
         <div className="space-y-2">
           <label htmlFor="prioridad" className="block text-sm font-medium">
-            Prioridad
+            Prioridad <span aria-hidden="true" className="text-red-600">*</span>
           </label>
           <select
             {...register("prioridad")}
+            aria-required="true"
             id="prioridad"
             defaultValue=""
             className="w-full rounded-lg border border-gray-300 px-3 py-2"

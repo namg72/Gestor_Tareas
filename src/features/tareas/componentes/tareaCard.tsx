@@ -40,14 +40,27 @@ export const TareaCard = ({
   actualizarListaTareas,
 }: TareaCardProps) => {
   const [dialogoAbierto, setDialogoAbierto] = useState(false);
+  const [eliminando, setEliminando] = useState(false);
+  const [errorEliminacion, setErrorEliminacion] = useState<string | null>(null);
   const [detalleAbierto, setDetalleAbierto] = useState(false);
 
   const onSolicitarEliminar = (): void => {
+    setErrorEliminacion(null);
     setDialogoAbierto(true);
   };
   const confirmarEliminacion = async (): Promise<void> => {
-    await eliminarTarea(tarea.id);
-    setDialogoAbierto(false);
+    if (eliminando) return;
+
+    setEliminando(true);
+    setErrorEliminacion(null);
+    try {
+      await eliminarTarea(tarea.id);
+      setDialogoAbierto(false);
+    } catch {
+      setErrorEliminacion("No se pudo eliminar la tarea. Inténtalo de nuevo.");
+    } finally {
+      setEliminando(false);
+    }
   };
 
   const abrirDetalle = (): void => {
@@ -105,8 +118,11 @@ export const TareaCard = ({
           textoConfirmar="Eliminar"
           textoCancelar="Cancelar"
           variante="peligro"
-          cargando={false}
-          onCambiarAbierto={setDialogoAbierto}
+          cargando={eliminando}
+          mensajeError={errorEliminacion}
+          onCambiarAbierto={(abierto) => {
+            if (!eliminando) setDialogoAbierto(abierto);
+          }}
           onConfirmar={confirmarEliminacion}
         />
       </article>
