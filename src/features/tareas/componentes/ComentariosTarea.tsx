@@ -213,7 +213,7 @@ export function ComentariosTarea({
           Todavía no hay comentarios.
         </p>
       ) : (
-        <ul className="space-y-3">
+        <ul className="space-y-3 max-h-64 overflow-y-auto">
           {ordenados.map((comentario) => (
             <li key={comentario.id}>
               <NotaComentario

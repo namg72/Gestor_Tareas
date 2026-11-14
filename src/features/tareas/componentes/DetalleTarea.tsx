@@ -1,16 +1,21 @@
 "use client";
 
-import { CalendarDays, FileText, LoaderCircle, X } from "lucide-react";
+import { CalendarDays, LoaderCircle, X } from "lucide-react";
 import type { Tarea } from "../types/tarea";
 import type { Adjunto } from "../types/adjuntos";
 import { useEffect, useState } from "react";
 import { AppButton } from "../../../components/atomos/buttons/AppButton";
 import { VisorAdjunto } from "./VisorAdjunto";
-import { ZonaAdjuntos } from "@/components/organismos/ZonaAdjuntos";
+import { AdjuntosDetalleTarea } from "./AdjuntosDetalleTarea";
 import { AppAlertDialog } from "@/components/moleculas/dialogoConfirmacion/AppAlertDialog";
 import { ComentariosTarea } from "./ComentariosTarea";
 import { useMutation } from "@tanstack/react-query";
-import { crearComentario } from "../peticiones/comentarios";
+import {
+  actualizarComentario,
+  borrarComentario,
+  crearComentario,
+} from "../peticiones/comentarios";
+import type { Comentario } from "../types/comentarios";
 
 type DetalleTareaProps = {
   id: number;
@@ -31,8 +36,12 @@ const estilosPrioridad = {
   alta: "bg-red-50 text-red-700 ring-red-200",
 };
 
+// Formato para la vista
+
+// Sustituye el guion bajo por un espacio.
 const formatearTexto = (texto: string): string => texto.replace("_", " ");
 
+// Muestra la fecha límite en español.
 const formatearFecha = (fecha: string | null): string => {
   if (!fecha) return "Sin fecha límite";
 
@@ -43,12 +52,6 @@ const formatearFecha = (fecha: string | null): string => {
   }).format(new Date(`${fecha}T00:00:00`));
 };
 
-const formatearTamano = (bytes: number): string => {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-};
 type CampoEditable = "titulo" | "descripcion" | "estado" | "prioridad" | null;
 
 export const DetalleTarea = ({
@@ -56,6 +59,7 @@ export const DetalleTarea = ({
   closeModal,
   actualizarListaTareas,
 }: DetalleTareaProps) => {
+  // Estados
   const [tarea, setTarea] = useState<Tarea | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -69,16 +73,9 @@ export const DetalleTarea = ({
     archivo: File;
     url: string;
   } | null>(null);
+  const [comentarioAEliminar, setComentarioAEliminar] =
+    useState<Comentario | null>(null);
 
-  useEffect(() => {
-    return () => {
-      if (archivoEnVista) URL.revokeObjectURL(archivoEnVista.url);
-    };
-  }, [archivoEnVista]);
-
-  const visualizarArchivoNuevo = (archivo: File): void => {
-    setArchivoEnVista({ archivo, url: URL.createObjectURL(archivo) });
-  };
   const [adjuntoAEliminar, setAdjuntoAEliminar] = useState<Adjunto | null>(
     null,
   );
@@ -86,10 +83,32 @@ export const DetalleTarea = ({
   const [guardando, setGuardando] = useState(false);
   const [errorGuardado, setErrorGuardado] = useState<string | null>(null);
 
-  const publicarComentario = useMutation({
+  // Mutaciones de comentarios
+
+  // Publica un comentario en la tarea abierta.
+  const publicarComentarioMutation = useMutation({
     mutationFn: (contenido: string) => crearComentario(id, contenido),
   });
 
+  // Guarda el texto editado de un comentario.
+  const editarComentarioMutation = useMutation({
+    mutationFn: ({
+      comentarioId,
+      contenido,
+    }: {
+      comentarioId: number;
+      contenido: string;
+    }) => actualizarComentario(comentarioId, contenido),
+  });
+
+  // Borra un comentario por su ID.
+  const borrarComentarioMutation = useMutation({
+    mutationFn: borrarComentario,
+  });
+
+  // Efectos
+
+  // Carga la tarea y prepara su borrador.
   useEffect(() => {
     const cargarTarea = async (): Promise<void> => {
       try {
@@ -115,10 +134,16 @@ export const DetalleTarea = ({
     void cargarTarea();
   }, [id]);
 
-  const cerrarDetalle = () => {
-    closeModal();
-  };
+  // Libera la URL temporal al cerrar o cambiar la vista previa.
+  useEffect(() => {
+    return () => {
+      if (archivoEnVista) URL.revokeObjectURL(archivoEnVista.url);
+    };
+  }, [archivoEnVista]);
 
+  // Acciones de edición
+
+  // Restaura la tarea guardada y descarta los cambios pendientes.
   const cancelarEdicion = (): void => {
     setBorrador(tarea);
     setCampoEditando(null);
@@ -128,6 +153,7 @@ export const DetalleTarea = ({
     setErrorGuardado(null);
   };
 
+  // Guarda la tarea y aplica los cambios de adjuntos.
   const guardarCambios = async (): Promise<void> => {
     if (!borrador || guardando) return;
     let tareaActualizada: Tarea = { ...borrador };
@@ -234,8 +260,13 @@ export const DetalleTarea = ({
       setGuardando(false);
     }
   };
+
+  // Acciones de comentarios
+
+  // Publica el comentario y lo añade a la lista.
   const onPublicar = async (contenido: string): Promise<void> => {
-    const comentarioCreado = await publicarComentario.mutateAsync(contenido);
+    const comentarioCreado =
+      await publicarComentarioMutation.mutateAsync(contenido);
 
     setTarea((tareaAnterior) => {
       if (tareaAnterior === null) return null;
@@ -247,6 +278,67 @@ export const DetalleTarea = ({
     });
   };
 
+  // Sustituye el comentario guardado en la vista y en el borrador.
+  const onEditarComentario = async (
+    comentarioId: number,
+    contenido: string,
+  ): Promise<void> => {
+    const comentarioActualizado = await editarComentarioMutation.mutateAsync({
+      comentarioId,
+      contenido,
+    });
+
+    const reemplazarComentario = (actual: Tarea | null): Tarea | null => {
+      if (!actual) return actual;
+
+      const comentarios = actual.comentarios ?? [];
+
+      return {
+        ...actual,
+        comentarios: comentarios.some((comentario) => comentario.id === comentarioId)
+          ? comentarios.map((comentario) =>
+              comentario.id === comentarioId ? comentarioActualizado : comentario,
+            )
+          : [...comentarios, comentarioActualizado],
+      };
+    };
+
+    setTarea(reemplazarComentario);
+    setBorrador(reemplazarComentario);
+  };
+
+  // Borra el comentario y lo retira de la lista.
+  const onBorrarComentario = async (id: number): Promise<void> => {
+    await borrarComentarioMutation.mutateAsync(id);
+
+    setTarea((tareaAnterior) => {
+      if (tareaAnterior === null) return null;
+
+      return {
+        ...tareaAnterior,
+        comentarios: (tareaAnterior.comentarios ?? []).filter(
+          (comentario) => comentario.id !== id,
+        ),
+      };
+    });
+  };
+
+  // Borra el comentario seleccionado y cierra el diálogo.
+  const confirmarBorradoComentario = async (): Promise<void> => {
+    if (!comentarioAEliminar) return;
+
+    await onBorrarComentario(comentarioAEliminar.id);
+    setComentarioAEliminar(null);
+  };
+
+  // Acciones de adjuntos
+
+  // Abre la vista previa de un archivo local.
+  const visualizarArchivoNuevo = (archivo: File): void => {
+    setArchivoEnVista({ archivo, url: URL.createObjectURL(archivo) });
+  };
+
+  // Marca el adjunto para borrarlo al guardar.
   const confirmarBorradoAdjunto = (): void => {
     if (!adjuntoAEliminar) return;
     setAdjuntosAEliminar((pendientes) => [
@@ -254,22 +346,30 @@ export const DetalleTarea = ({
     ]);
     setAdjuntoAEliminar(null);
   };
-  const zonaAdjuntos = (): void => {
+
+  // Muestra la zona de subida.
+  const mostrarSubidaAdjuntos = (): void => {
     setMostrarZonaAdjuntos(true);
   };
-  const cancelarSubida = (): void => {
+
+  // Oculta la zona de subida.
+  const ocultarSubidaAdjuntos = (): void => {
     setMostrarZonaAdjuntos(false);
   };
 
+  // Añade archivos a la lista pendiente de subir.
   const archivosAdjuntados = (nuevos: File[]): void => {
     setArchivosNuevos((anteriores) => [...anteriores, ...nuevos]);
   };
 
+  // Quita un archivo de la lista pendiente.
   const eliminarArchivoNuevo = (indice: number): void => {
     setArchivosNuevos((anteriores) =>
       anteriores.filter((_, posicion) => posicion !== indice),
     );
   };
+
+  // Vista del detalle
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm">
       {cargando ? (
@@ -294,7 +394,7 @@ export const DetalleTarea = ({
               aria-label="Cerrar detalle"
               disabled={guardando}
               className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
-              onClick={cerrarDetalle}
+              onClick={closeModal}
             >
               <X className="size-5" aria-hidden="true" />
             </button>
@@ -302,7 +402,7 @@ export const DetalleTarea = ({
           <header className="flex items-start justify-between gap-6 border-b border-slate-200 px-6 py-5 sm:px-8">
             <div className="min-w-0 flex-1 space-y-2">
               <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
-                Tarea #{tarea!.id}
+                Tarea #{tarea.id}
               </p>
               {campoEditando === "titulo" ? (
                 <input
@@ -326,7 +426,7 @@ export const DetalleTarea = ({
 
             <div className="flex shrink-0 items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
               <CalendarDays className="size-4" aria-hidden="true" />
-              <span>{formatearFecha(tarea!.fecha_limite)}</span>
+              <span>{formatearFecha(tarea.fecha_limite)}</span>
             </div>
           </header>
 
@@ -362,105 +462,24 @@ export const DetalleTarea = ({
               <ComentariosTarea
                 comentarios={tarea.comentarios ?? []}
                 onPublicar={onPublicar}
+                onEditar={onEditarComentario}
+                onSolicitarEliminar={setComentarioAEliminar}
               />
 
-              <section className="space-y-3">
-                <div className="flex items-center justify-between gap-4">
-                  <h3 className="text-base font-semibold text-slate-900">
-                    Archivos adjuntos
-                    <span className="ml-2">
-                      (
-                      {tarea.adjuntos?.filter(
-                        (adjunto) => !adjuntosAEliminar.includes(adjunto.id),
-                      ).length ?? 0}
-                      )
-                    </span>
-                  </h3>
-
-                  {!mostrarZonaAdjuntos ? (
-                    <AppButton
-                      type={"button"}
-                      texto="Añadir adjunto"
-                      onClick={zonaAdjuntos}
-                    />
-                  ) : (
-                    <AppButton
-                      type={"button"}
-                      texto="Ocultar zona de subida"
-                      colorFondo="neutral"
-                      onClick={cancelarSubida}
-                    />
-                  )}
-                </div>
-
-                {tarea.adjuntos && tarea.adjuntos.length > 0 ? (
-                  <ul className="space-y-2">
-                    {tarea.adjuntos
-                      .filter(
-                        (adjunto) => !adjuntosAEliminar.includes(adjunto.id),
-                      )
-                      .map((adjunto) => {
-                        return (
-                          <li
-                            key={adjunto.id}
-                            className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2"
-                          >
-                            <button
-                              type="button"
-                              onClick={() => setAdjuntoSeleccionado(adjunto)}
-                              aria-label={`Abrir ${adjunto.nombre_original}`}
-                              className="flex min-w-0 flex-1 items-center gap-3 rounded text-left transition-colors hover:text-blue-600 focus-visible:outline-2 focus-visible:outline-blue-500"
-                            >
-                              <FileText
-                                className="size-5 shrink-0 text-slate-500"
-                                aria-hidden="true"
-                              />
-
-                              <div className="min-w-0 flex-1">
-                                <p
-                                  className="truncate text-sm font-medium text-slate-800"
-                                  title={adjunto.nombre_original}
-                                >
-                                  {adjunto.nombre_original}
-                                </p>
-                                <p className="text-xs text-slate-500">
-                                  {formatearTamano(adjunto.tamano_bytes)}
-                                </p>
-                              </div>
-                            </button>
-                            <button
-                              type="button"
-                              disabled={guardando}
-                              aria-label={`Eliminar ${adjunto.nombre_original}`}
-                              onClick={() => setAdjuntoAEliminar(adjunto)}
-                              className="shrink-0 rounded-md p-1 text-slate-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
-                            >
-                              <X aria-hidden="true" className="size-4" />
-                            </button>
-                          </li>
-                        );
-                      })}
-                  </ul>
-                ) : archivosNuevos.length === 0 ? (
-                  <div className="flex min-h-32 items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
-                    <div className="space-y-2 text-slate-500">
-                      <FileText
-                        className="mx-auto size-8 text-slate-400"
-                        aria-hidden="true"
-                      />
-                      <p className="text-sm">Esta tarea no tiene adjuntos.</p>
-                    </div>
-                  </div>
-                ) : null}
-              </section>
-              {mostrarZonaAdjuntos && (
-                <ZonaAdjuntos
-                  visualizarArchivo={visualizarArchivoNuevo}
-                  archivos={archivosNuevos}
-                  archivosAdjuntados={archivosAdjuntados}
-                  eliminarArchivo={eliminarArchivoNuevo}
-                />
-              )}
+              <AdjuntosDetalleTarea
+                adjuntos={tarea.adjuntos ?? []}
+                adjuntosAEliminar={adjuntosAEliminar}
+                archivosNuevos={archivosNuevos}
+                guardando={guardando}
+                mostrarZonaAdjuntos={mostrarZonaAdjuntos}
+                zonaAdjuntos={mostrarSubidaAdjuntos}
+                cancelarSubida={ocultarSubidaAdjuntos}
+                abrirAdjunto={setAdjuntoSeleccionado}
+                solicitarEliminarAdjunto={setAdjuntoAEliminar}
+                visualizarArchivoNuevo={visualizarArchivoNuevo}
+                archivosAdjuntados={archivosAdjuntados}
+                eliminarArchivoNuevo={eliminarArchivoNuevo}
+              />
             </main>
 
             <aside className="h-fit space-y-6 rounded-xl border border-slate-200 bg-slate-50 p-5">
@@ -585,6 +604,20 @@ export const DetalleTarea = ({
           cerrarVisor={() => setArchivoEnVista(null)}
         />
       )}
+
+      <AppAlertDialog
+        abierto={comentarioAEliminar !== null}
+        titulo="Eliminar comentario"
+        descripcion="¿Estás seguro de que quieres eliminar el comentario?"
+        textoCancelar="Cancelar"
+        textoConfirmar="Eliminar"
+        onCambiarAbierto={function (abierto: boolean): void {
+          if (!abierto) {
+            setComentarioAEliminar(null);
+          }
+        }}
+        onConfirmar={confirmarBorradoComentario}
+      />
     </div>
   );
 };
