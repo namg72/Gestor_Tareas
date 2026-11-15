@@ -1,6 +1,7 @@
 "use client";
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
-import type { MensajeResult, Tarea } from "../types/tarea";
+import type { DestinoTarea, MensajeResult, Tarea } from "../types/tarea";
+import { POSICION_FINAL } from "../types/tarea";
 import { ColumnaTareas } from "./ColumnaTareas";
 import { BarraTareas } from "./BarraTareas";
 import { ModalTarea } from "./ModalTarea";
@@ -15,7 +16,7 @@ export const TableroTareas = () => {
   const [prioridad, setPrioridad] = useState<string>("todas");
   const [añadirTareaIsVisible, setAñadirTareaIsVisible] = useState(false);
   const [avisoTarea, setAvisoTarea] = useState<MensajeResult | null>(null);
-  const tareasMoviendose = useRef(new Set<number>());
+  const movimientoEnCurso = useRef(false);
 
   const contextVencimientos = useContext(VencimientosContext);
 
@@ -59,7 +60,7 @@ export const TableroTareas = () => {
       prioridad === "todas" || tarea.prioridad === prioridad;
 
     return coincideTitulo && coincideEstado && coincidePrioridad;
-  });
+  }).sort((a, b) => a.posicion - b.posicion || a.id - b.id);
   const tareasEnCurso = tareasFiltradas.filter(
     (tarea) => tarea.estado === "en_curso",
   );
@@ -111,29 +112,30 @@ export const TableroTareas = () => {
     setAvisoTarea({ tipo: "exito", mensaje: "Tarea borrada correctamente" });
   };
 
-  const moverTarea = async (id: number, nuevoEstado: Tarea["estado"]): Promise<void> => {
-    const tarea = tareas.find((item) => item.id === id);
-    if (!tarea || tarea.estado === nuevoEstado || tareasMoviendose.current.has(id)) return;
+  const moverTarea = async (id: number, destino: DestinoTarea): Promise<void> => {
+    if (movimientoEnCurso.current) return;
 
-    tareasMoviendose.current.add(id);
+    movimientoEnCurso.current = true;
     try {
-      const respuesta = await fetch(`/api/tareas/${id}`, {
+      const respuesta = await fetch(`/api/tareas/${id}/mover`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ estado: nuevoEstado }),
+        body: JSON.stringify(destino),
       });
       if (!respuesta.ok) throw new Error("No se pudo mover la tarea");
 
-      setTareas((anteriores) =>
-        anteriores.map((item) =>
-          item.id === id ? { ...item, estado: nuevoEstado } : item,
-        ),
-      );
+      const posiciones: Pick<Tarea, "id" | "estado" | "posicion">[] =
+        await respuesta.json();
+      const porId = new Map(posiciones.map((posicion) => [posicion.id, posicion]));
+      setTareas((anteriores) => anteriores.map((item) => {
+        const posicion = porId.get(item.id);
+        return posicion ? { ...item, ...posicion } : item;
+      }));
       setAvisoTarea({ tipo: "exito", mensaje: "Tarea movida correctamente" });
     } catch {
       setAvisoTarea({ tipo: "error", mensaje: "No se pudo mover la tarea" });
     } finally {
-      tareasMoviendose.current.delete(id);
+      movimientoEnCurso.current = false;
     }
   };
 
@@ -141,7 +143,10 @@ export const TableroTareas = () => {
     setTareas(
       (anteriores) => anteriores.map((item) => {
         if (item.id === tarea.id) {
-          return tarea;
+          return {
+            ...tarea,
+            posicion: item.estado === tarea.estado ? item.posicion : POSICION_FINAL,
+          };
         }
         return item;
       }),

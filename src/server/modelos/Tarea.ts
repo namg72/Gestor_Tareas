@@ -6,6 +6,7 @@ import type {
 } from "sequelize";
 import { conexion } from "@/server/db/conexion";
 import type { Estado, Prioridad } from "@/features/tareas/types/tarea";
+import { POSICION_FINAL } from "@/features/tareas/types/tarea";
 
 export class Tarea extends Model<
   InferAttributes<Tarea>,
@@ -16,6 +17,7 @@ export class Tarea extends Model<
   declare descripcion: string | null;
   declare estado: CreationOptional<Estado>;
   declare prioridad: CreationOptional<Prioridad>;
+  declare posicion: CreationOptional<number>;
   declare fecha_limite: string | null;
   declare creada_en: CreationOptional<Date>;
   declare actualizada_en: CreationOptional<Date>;
@@ -50,6 +52,11 @@ Tarea.init(
     fecha_limite: {
       type: DataTypes.DATEONLY,
       allowNull: true,
+    },
+    posicion: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: POSICION_FINAL,
     },
     creada_en: {
       type: DataTypes.DATE,
