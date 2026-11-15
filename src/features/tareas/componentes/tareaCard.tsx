@@ -6,6 +6,7 @@ import { MenuAccionesTarea } from "./MenuAccionesTarea";
 import { AppAlertDialog } from "@/components/moleculas/dialogoConfirmacion/AppAlertDialog";
 import { useState } from "react";
 import { DetalleTarea } from "./DetalleTarea";
+import { calcularDiasRestantes } from "../utils/calcularDiasRestantes";
 
 type TareaCardProps = {
   tarea: Tarea;
@@ -71,6 +72,30 @@ export const TareaCard = ({
     setDetalleAbierto(false);
   };
 
+  const diasRestantes = tarea.fecha_limite
+    ? calcularDiasRestantes(tarea.fecha_limite)
+    : null;
+
+  let colorVencimiento = "bg-slate-100 text-slate-700";
+  if (diasRestantes !== null && diasRestantes >= 0 && diasRestantes <= 7) {
+    if (diasRestantes <= 1) {
+      colorVencimiento = "bg-red-100 text-red-800";
+    } else if (diasRestantes <= 3) {
+      colorVencimiento = "bg-orange-100 text-orange-800";
+    } else {
+      colorVencimiento = "bg-yellow-100 text-yellow-800";
+    }
+  }
+
+  let textoVencimiento = `Vence en ${diasRestantes} días`;
+  if (diasRestantes !== null && diasRestantes < 0) {
+    textoVencimiento = "Vencida";
+  } else if (diasRestantes === 0) {
+    textoVencimiento = "Vence hoy";
+  } else if (diasRestantes === 1) {
+    textoVencimiento = "Vence mañana";
+  }
+
   return (
     <>
       <article
@@ -80,9 +105,18 @@ export const TareaCard = ({
       >
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 space-y-1.5">
-            <h3 className="text-base font-semibold leading-tight text-slate-900">
-              {tarea.titulo}
-            </h3>
+            <div className="flex gap-10">
+              <h3 className="text-base font-semibold leading-tight text-slate-900">
+                {tarea.titulo}
+              </h3>
+              {diasRestantes !== null && diasRestantes < 7 && (
+                <span
+                  className={`self-start rounded-full px-2 py-0.5 text-xs font-bold ${colorVencimiento}`}
+                >
+                  {textoVencimiento}
+                </span>
+              )}
+            </div>
             <p className="text-sm leading-relaxed text-slate-500">
               {tarea.descripcion}
             </p>

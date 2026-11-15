@@ -16,6 +16,7 @@ import {
   crearComentario,
 } from "../peticiones/comentarios";
 import type { Comentario } from "../types/comentarios";
+import { calcularDiasRestantes } from "../utils/calcularDiasRestantes";
 
 type DetalleTareaProps = {
   id: number;
@@ -52,7 +53,13 @@ const formatearFecha = (fecha: string | null): string => {
   }).format(new Date(`${fecha}T00:00:00`));
 };
 
-type CampoEditable = "titulo" | "descripcion" | "estado" | "prioridad" | null;
+type CampoEditable =
+  | "titulo"
+  | "descripcion"
+  | "estado"
+  | "prioridad"
+  | "fecha_limite"
+  | null;
 
 export const DetalleTarea = ({
   id,
@@ -377,6 +384,22 @@ export const DetalleTarea = ({
     );
   };
 
+  const fechaLimite = borrador?.fecha_limite;
+  const diasRestantes = fechaLimite
+    ? calcularDiasRestantes(fechaLimite)
+    : null;
+
+  let colorVencimiento = "bg-slate-50 text-slate-600";
+  if (diasRestantes !== null && diasRestantes >= 0 && diasRestantes <= 7) {
+    if (diasRestantes <= 1) {
+      colorVencimiento = "bg-red-100 text-red-800";
+    } else if (diasRestantes <= 3) {
+      colorVencimiento = "bg-orange-100 text-orange-800";
+    } else {
+      colorVencimiento = "bg-yellow-100 text-yellow-800";
+    }
+  }
+
   // Vista del detalle
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm">
@@ -432,9 +455,35 @@ export const DetalleTarea = ({
               )}
             </div>
 
-            <div className="flex shrink-0 items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
+            <div
+              className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm ${colorVencimiento}`}
+            >
               <CalendarDays className="size-4" aria-hidden="true" />
-              <span>{formatearFecha(tarea.fecha_limite)}</span>
+              {campoEditando === "fecha_limite" ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    type="date"
+                    aria-label="Fecha límite"
+                    value={borrador.fecha_limite ?? ""}
+                    onChange={(evento) =>
+                      setBorrador({
+                        ...borrador,
+                        fecha_limite: evento.target.value || null,
+                      })
+                    }
+                    className="rounded-md border border-slate-300 bg-white px-2 py-1"
+                  />
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setCampoEditando("fecha_limite")}
+                  className="rounded hover:text-blue-700"
+                  aria-label="Editar fecha límite"
+                >
+                  {formatearFecha(borrador.fecha_limite)}
+                </button>
+              )}
             </div>
           </header>
 

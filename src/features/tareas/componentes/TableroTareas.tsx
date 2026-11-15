@@ -1,10 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import type { MensajeResult, Tarea } from "../types/tarea";
 import { ColumnaTareas } from "./ColumnaTareas";
 import { BarraTareas } from "./BarraTareas";
 import { ModalTarea } from "./ModalTarea";
 import { AppMensaje } from "@/components/atomos/feedback/AppMensaje";
+import { ProximosVencimientos } from "../utils/vencimientos";
+import { VencimientosContext } from "../context/VencimientoContext";
 
 export const TableroTareas = () => {
   const [tareas, setTareas] = useState<Tarea[]>([]);
@@ -13,6 +15,10 @@ export const TableroTareas = () => {
   const [prioridad, setPrioridad] = useState<string>("todas");
   const [añadirTareaIsVisible, setAñadirTareaIsVisible] = useState(false);
   const [avisoTarea, setAvisoTarea] = useState<MensajeResult | null>(null);
+
+  const contextVencimientos = useContext(VencimientosContext);
+
+  const actualizarVencimientos = contextVencimientos?.actualizarVencimientos;
 
   useEffect(() => {
     const cargarTareas = async () => {
@@ -32,6 +38,14 @@ export const TableroTareas = () => {
 
     void cargarTareas();
   }, []);
+
+  const proximasAVencer = useMemo(() => ProximosVencimientos(tareas), [tareas]);
+
+  useEffect(() => {
+    if (actualizarVencimientos) {
+      actualizarVencimientos(proximasAVencer);
+    }
+  }, [proximasAVencer, actualizarVencimientos]);
 
   const tareasFiltradas = tareas.filter((tarea) => {
     const coincideTitulo = tarea.titulo

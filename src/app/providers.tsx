@@ -1,4 +1,5 @@
 "use client";
+import { VencimientosProvider } from "@/features/tareas/context/VencimientoContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import type { ReactNode } from "react";
@@ -12,7 +13,7 @@ export const Providers = ({ children }: ProvidersProps) => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
+      <VencimientosProvider>{children}</VencimientosProvider>
     </QueryClientProvider>
   );
 };
