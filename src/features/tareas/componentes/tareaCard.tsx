@@ -99,6 +99,11 @@ export const TareaCard = ({
   return (
     <>
       <article
+        draggable
+        onDragStart={(evento) => {
+          evento.dataTransfer.setData("application/x-tablero-tarea", String(tarea.id));
+          evento.dataTransfer.effectAllowed = "move";
+        }}
         onClick={() => abrirDetalle()}
         className="flex flex-col gap-5 rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 ease-out
                   hover:-translate-y-1 hover:border-blue-200 hover:shadow-md"

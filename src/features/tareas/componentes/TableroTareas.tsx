@@ -1,5 +1,5 @@
 "use client";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { MensajeResult, Tarea } from "../types/tarea";
 import { ColumnaTareas } from "./ColumnaTareas";
 import { BarraTareas } from "./BarraTareas";
@@ -15,6 +15,7 @@ export const TableroTareas = () => {
   const [prioridad, setPrioridad] = useState<string>("todas");
   const [añadirTareaIsVisible, setAñadirTareaIsVisible] = useState(false);
   const [avisoTarea, setAvisoTarea] = useState<MensajeResult | null>(null);
+  const tareasMoviendose = useRef(new Set<number>());
 
   const contextVencimientos = useContext(VencimientosContext);
 
@@ -110,9 +111,35 @@ export const TableroTareas = () => {
     setAvisoTarea({ tipo: "exito", mensaje: "Tarea borrada correctamente" });
   };
 
+  const moverTarea = async (id: number, nuevoEstado: Tarea["estado"]): Promise<void> => {
+    const tarea = tareas.find((item) => item.id === id);
+    if (!tarea || tarea.estado === nuevoEstado || tareasMoviendose.current.has(id)) return;
+
+    tareasMoviendose.current.add(id);
+    try {
+      const respuesta = await fetch(`/api/tareas/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ estado: nuevoEstado }),
+      });
+      if (!respuesta.ok) throw new Error("No se pudo mover la tarea");
+
+      setTareas((anteriores) =>
+        anteriores.map((item) =>
+          item.id === id ? { ...item, estado: nuevoEstado } : item,
+        ),
+      );
+      setAvisoTarea({ tipo: "exito", mensaje: "Tarea movida correctamente" });
+    } catch {
+      setAvisoTarea({ tipo: "error", mensaje: "No se pudo mover la tarea" });
+    } finally {
+      tareasMoviendose.current.delete(id);
+    }
+  };
+
   const actualizarListaTareas = (tarea: Tarea): void => {
     setTareas(
-      tareas.map((item) => {
+      (anteriores) => anteriores.map((item) => {
         if (item.id === tarea.id) {
           return tarea;
         }
@@ -138,6 +165,8 @@ export const TableroTareas = () => {
       <div className="grid min-h-0 w-full flex-1 grid-cols-4 grid-rows-1 gap-4">
         <ColumnaTareas
           titulo={"Pendiente"}
+          estado="pendiente"
+          moverTarea={moverTarea}
           color={"red"}
           tareas={tareasPendientes}
           eliminarTarea={eliminarTarea}
@@ -145,6 +174,8 @@ export const TableroTareas = () => {
         />
         <ColumnaTareas
           titulo={"En curso"}
+          estado="en_curso"
+          moverTarea={moverTarea}
           color={"yellow"}
           tareas={tareasEnCurso}
           eliminarTarea={eliminarTarea}
@@ -152,6 +183,8 @@ export const TableroTareas = () => {
         />
         <ColumnaTareas
           titulo={"Bloqueada"}
+          estado="bloqueada"
+          moverTarea={moverTarea}
           color={"purple"}
           tareas={tareasBloqueadas}
           eliminarTarea={eliminarTarea}
@@ -159,6 +192,8 @@ export const TableroTareas = () => {
         />
         <ColumnaTareas
           titulo={"Terminada"}
+          estado="terminada"
+          moverTarea={moverTarea}
           color={"green"}
           tareas={tareasTerminadas}
           eliminarTarea={eliminarTarea}
